@@ -1,0 +1,3 @@
+checkDCI <- function(data) {
+  
+}
