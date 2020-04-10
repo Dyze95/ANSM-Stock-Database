@@ -1,7 +1,7 @@
 # Fichiers
 
-Import.R : fonctions d'import des données à partir d'un ou plusieurs dossiers
-Process.R : fonctions de retraitement basique des données (supprimer les doublons, corriger les DCI, formes et dosages, ...)
+Import.R : fonctions d'import des données à partir d'un ou plusieurs dossiers\
+Process.R : fonctions de retraitement basique des données (supprimer les doublons, corriger les DCI, formes et dosages, ...)\
 Check.R : fonctions de vérification de la qualité des données
 Main.R : exemples d'utilisation
 
