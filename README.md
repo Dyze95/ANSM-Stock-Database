@@ -1,17 +1,25 @@
 # Fichiers CSV
 
-column_names.csv : Traduction des noms de colonnes vus lors de l'import depuis XLSX\
-shortDCI.csv : Tableau de correspondance entre DCI long et DCI court\
-shortFormes.csv : Tableau de correspondance entre Forme longue et Forme courte\
-CIP_Dosage.csv : Tableau de correspondance entre CIP7 et Dosage/Unites. Ce ne sont pas juste des corrections mais contient tous les CIP7 possibles. [TODO : lorsque la fonction d'import rencontre un CIP inconnu, elle propose de l'ajouter à la suite du fichier avec corrections par l'utilisateur si besoin]\
+column_names.csv : Traduction des noms de colonnes vus lors de l'import depuis XLSX
+
+shortDCI.csv : Tableau de correspondance entre DCI long et DCI court
+
+shortFormes.csv : Tableau de correspondance entre Forme longue et Forme courte
+
+CIP_Dosage.csv : Tableau de correspondance entre CIP7 et Dosage/Unites. Ce ne sont pas juste des corrections mais contient tous les CIP7 possibles. [TODO : lorsque la fonction d'import rencontre un CIP inconnu, elle propose de l'ajouter à la suite du fichier avec corrections par l'utilisateur si besoin]
+
 missing_CIP7.csv : Tableau permettant d'attribuer un CIP7 adhoc à une présentation pour laquelle le CIP7 est manquant (cela arrive parfois que les labos ne remplissent pas le CIP7 mais uniquement la spécialité et la présentation). Ce CIP7 adhoc permet de faciliter les traitements futurs (retrouver le dosage, notamment)
 
 # Scripts
 
-Import.R : fonctions d'import des données à partir d'un ou plusieurs dossiers\
-Process.R : fonctions de retraitement basique des données (supprimer les doublons, corriger les DCI, formes et dosages, ...)\
-Check.R : fonctions de vérification de la qualité des données\
-Helpers.R : fonctions utilitaires\
+Import.R : fonctions d'import des données à partir d'un ou plusieurs dossiers
+
+Process.R : fonctions de retraitement basique des données (supprimer les doublons, corriger les DCI, formes et dosages, ...)
+
+Check.R : fonctions de vérification de la qualité des données
+
+Helpers.R : fonctions utilitaires
+
 Main.R : exemples d'utilisation
 
 ## Fonctions de Import.R
@@ -117,6 +125,6 @@ Verifie que le dataframe data ne contient pas de doublons de CIP7 pour une même
 Prend en entrée une chaine de caractères répresentant un dosage et renvoie un nombre représentant la dose en mg. (Non utilisé pour l'instant, mais peut-etre utile...)
 
 Exemples :\
-"10mg" -> 10
+"10mg" -> 10\
 "10mg/mL;2mL" -> 20
 
