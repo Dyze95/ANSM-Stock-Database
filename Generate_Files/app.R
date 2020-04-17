@@ -13,12 +13,14 @@ ui <- fluidPage(
         sidebarPanel(
             textInput("add_DCI", "DCI à ajouter"),
             actionButton("add_button", "Ajouter")
+            #textOutput("text")
         ),
         
         mainPanel(
             tabsetPanel(
                 tabPanel("DCI", DT::dataTableOutput("table_DCI")),
-                tabPanel("Fichier", DT::dataTableOutput("table_CIP")) 
+                tabPanel("Dosages", DT::dataTableOutput("table_Dosage")),
+                tabPanel("Fichier", DT::dataTableOutput("table_CIP"))
             ),
             actionButton("generate_button", "Générer le fichier Excel")
         )
@@ -27,7 +29,7 @@ ui <- fluidPage(
 )
 
 # Define server logic
-server <- function(input, output) {
+server <- function(input, output, session) {
     
     shinyInput <- function(FUN, len, start, id, ...) {
         #print(len)
@@ -39,16 +41,46 @@ server <- function(input, output) {
         inputs
     }
     
+    test <- reactiveValues(text = "Hello")
+    
     df <- reactiveValues(DCI = data.frame(stringsAsFactors = FALSE),
-                         CIP = data.frame(stringsAsFactors = FALSE))
+                         CIP = data.frame(stringsAsFactors = FALSE),
+                         df_Dosage = data.frame(
+                             CIP7 = c(1,2,3,4),
+                             Dosage = c("50mg", "100mg", "200mg", "300mg"),
+                             New_Dosage = shinyInput(textInput, 4, 1, "dosage_", label = NULL),
+                             Actions = shinyInput(actionButton, 4, 1, "button_", label = "Valider",
+                                                  onclick = 'Shiny.onInputChange(\"validate_button\",  this.id)'),
+                             stringsAsFactors = FALSE))
     
-    output$table_DCI = DT::renderDataTable({
-        df$DCI
-    }, escape=FALSE)
+    output$table_DCI = DT::renderDataTable(df$DCI, escape=FALSE)
     
-    output$table_CIP = DT::renderDataTable({
-        df$CIP
-    }, escape=FALSE)
+    output$table_CIP = DT::renderDataTable(df$CIP, escape=FALSE)
+    
+    output$table_Dosage = DT::renderDataTable({
+        datatable(
+            df$df_Dosage,
+            selection="multiple",
+            escape = FALSE,
+            options = list(
+                dom = 'BRrltpi',
+                autoWidth=TRUE,
+                #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                ColReorder = TRUE,
+                preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
+                drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
+            )
+        )
+    })
+    
+    #output$text = renderText(test$text)
+    
+    observeEvent(input$validate_button, {
+        selectedRow <- as.character(strsplit(input$validate_button, "_")[[1]][2])
+        test$text <- input$dosage_1
+        print(input$dosage_1)
+        print(input$validate_button)
+    })
     
     observeEvent(input$select_button, {
         selectedRow <- as.character(strsplit(input$select_button, "_")[[1]][2])
@@ -63,7 +95,6 @@ server <- function(input, output) {
     
     observeEvent(input$add_button, {
         #print(input$add_DCI)
-        
         start <- if(nrow(df$DCI) == 0) 1 else max(as.numeric(row.names(df$DCI)))+1
         CIP_to_add <- CIP_data[grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),CIP_data$DCI, ignore.case = TRUE),]
         CIP_to_add <- CIP_to_add[!CIP_to_add$DCI %in% df$DCI$DCI,]
@@ -84,6 +115,7 @@ server <- function(input, output) {
             df$DCI <- rbind(df$DCI, DCI_to_add)
             df$CIP <- rbind(df$CIP, CIP_to_add)
         }
+        updateTextInput(session, "add_DCI", value = "")
     })
 }
 
