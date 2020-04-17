@@ -65,7 +65,8 @@ server <- function(input, output) {
         #print(input$add_DCI)
         
         start <- if(nrow(df$DCI) == 0) 1 else max(as.numeric(row.names(df$DCI)))+1
-        CIP_to_add <- CIP_data[grepl(input$add_DCI,CIP_data$DCI),]
+        CIP_to_add <- CIP_data[grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),CIP_data$DCI, ignore.case = TRUE),]
+        CIP_to_add <- CIP_to_add[!CIP_to_add$DCI %in% df$DCI$DCI,]
         #View(CIP_to_add)
         if(nrow(CIP_to_add) > 0) {
             DCI_to_add <- data.frame(DCI=unique(CIP_to_add$DCI), stringsAsFactors = FALSE)
