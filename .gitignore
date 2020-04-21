@@ -5,3 +5,6 @@ corrections*.csv
 *.xlsx
 .httr-oauth
 database-stock.csv
+Generate_Files/CIP_data_quotidien.csv
+in_CIS_*_bdpm.csv
+Generate_Files/Codex_China.csv

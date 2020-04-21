@@ -1,43 +1,76 @@
 "x"
-"Laboratoire";"Laboratoire"
-"CIP7";"CIP7"
-"CIP13";"CIP13"
-"CIS";"CIS"
-"DCI";"DCI"
-"Spécialité";"Specialite"
-"Présentation";"Presentation"
-"Forme";"Forme"
-"Dosage";"Dosage"
-"Nombre d'unité par boîte";"Unites"
-"Stock à date (boîtes)";"Stock"
-"Ventes J-1 (boîtes)";"Ventes J-1"
-"Consommation mensuelle usuelle (hopital+ville) avant la crise COVID-19";"Conso usuelle"
-"Approvisionnements à venir S15 (boîtes)";"Appro S15"
-"Approvisionnements S16 (boîtes)";"Appro S16"
-"Approvisionnements S17 (boîtes)";"Appro S17"
-"Approvisionnements S18 (boîtes)";"Appro S18"
-"Approvisionnements S19 (boîtes)";"Appro S19"
-"Approvisionnements S20 (boîtes)";"Appro S20"
-"Approvisionnements S21 (boîtes)";"Appro S21"
-"Commentaires";"Appro S22"
-"Consommation Mensuelle Ville (boîtes)";"Conso Ville"
-"Consommation Mensuelle Hôpital (boîtes)";"Conso Hopital"
-"Ventes Semaine 14 (boîtes)";"Ventes S14"
-"Approvisionnement S15 (boîtes)";"Appro S15"
-"Approvisionnement S16 (boîtes)";"Appro S16"
-"Approvisionnement S17 (boîtes)";"Appro S17"
-"Approvisionnement S18 (boîtes)";"Appro S18"
-"Approvisionnement S19 (boîtes)";"Appro S19"
-"Approvisionnement S20 (boîtes)";"Appro S20"
-"Approvisionnement S21 (boîtes)";"Appro S21"
-"Code Baxter";NA
-"Approvisionnements S22 (boîtes)";"Appro S22"
-"Approvisionnements S23 (boîtes)";"Appro S23"
-"...5";NA
-"...22";NA
-"Ventes S-1 (boîtes)-S14";"Ventes S14"
-"Ventes J-1 (boîtes) 09/04/2020";"Ventes J-1"
-"Ventes Semaine 13 (boîtes)";"Ventes S13"
-"Approvisionnement S14 (boîtes)";"Appro S14"
-"Ventes Semaine 13 (boîtes)
-* Ventes cumulées au 31/03/20";NA
+"1";"Laboratoire"
+"2";"CIP7"
+"3";"CIP13"
+"4";"CIS"
+"5";"DCI"
+"6";"Specialite"
+"7";"Presentation"
+"8";"Forme"
+"9";"Dosage"
+"10";"Unites"
+"11";"Stock"
+"12";"Ventes J-1"
+"13";"Conso usuelle"
+"14";"Appro S15"
+"15";"Appro S16"
+"16";"Appro S17"
+"17";"Appro S18"
+"18";"Appro S19"
+"19";"Appro S20"
+"20";"Appro S21"
+"21";"Appro S22"
+"22";"Conso Ville"
+"23";"Conso Hopital"
+"24";"Ventes S14"
+"25";"Appro S15"
+"26";"Appro S16"
+"27";"Appro S17"
+"28";"Appro S18"
+"29";"Appro S19"
+"30";"Appro S20"
+"31";"Appro S21"
+"32";NA
+"33";"Appro S22"
+"34";"Appro S23"
+"35";NA
+"36";NA
+"37";"Ventes S14"
+"38";"Ventes J-1"
+"39";"Ventes S13"
+"40";"Appro S14"
+"41";NA
+"42";"Specialite"
+"43";"Presentation"
+"44";"Unites"
+"45";"Stock"
+"46";"Ventes"
+"47";"Conso Mensuelle"
+"48";"Appro S15"
+"49";NA
+"50";NA
+"51";NA
+"52";NA
+"53";NA
+"54";NA
+"55";NA
+"56";NA
+"57";NA
+"58";NA
+"59";NA
+"60";NA
+"61";NA
+"62";NA
+"63";NA
+"64";NA
+"65";NA
+"66";NA
+"67";NA
+"68";NA
+"69";NA
+"70";NA
+"71";NA
+"72";NA
+"73";NA
+"74";NA
+"75";NA

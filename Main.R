@@ -72,17 +72,17 @@ write.table(data_2, "database-stock.csv", sep=";")
 # Upload des données
 upload_dataframe(data_2)
 
-data_3 <- data_2[,c("DCI", "Dosage", "Unites", "Stock", "Ventes J-1")]
-data_3$Stock_U <- data_3$Stock * data_3$Unites
-data_3$Ventes_U <- data_3$Ventes * data_3$Unites
-data_3 <- data_3[,c("DCI", "Dosage", "Stock_U", "Ventes_U")]
-data_3 <- NULL
+#data_3 <- data_2[,c("DCI", "Dosage", "Unites", "Stock", "Ventes J-1")]
+#data_3$Stock_U <- data_3$Stock * data_3$Unites
+#data_3$Ventes_U <- data_3$Ventes * data_3$Unites
+#data_3 <- data_3[,c("DCI", "Dosage", "Stock_U", "Ventes_U")]
+#data_3 <- NULL
   
-upload_dataframe(data_2)
+#upload_dataframe(data_2)
 
-data_3 <- unique(data_2[,c("CIP7", "Laboratoire")])
+#data_3 <- unique(data_2[,c("CIP7", "Laboratoire")])
 
-CIS <- read.delim(file = "Generate_Files/CIS_bdpm.txt", quote = "", fill = F, stringsAsFactors = F, header = F, fileEncoding="ISO-8859-1")
-CIP_data <- read.csv("Generate_Files/CIP_Data.csv", sep=";")
+#CIS <- read.delim(file = "Generate_Files/CIS_bdpm.txt", quote = "", fill = F, stringsAsFactors = F, header = F, fileEncoding="ISO-8859-1")
+#CIP_data <- read.csv("Generate_Files/CIP_Data.csv", sep=";")
 
-CIP_data[grepl("CISATRACURIUM",CIP_data$DCI),]
+#CIP_data[grepl("CISATRACURIUM",CIP_data$DCI),]
