@@ -6,7 +6,7 @@ library(plyr)
 
 #CIS <- read.delim(file = "CIS_bdpm.txt", quote = "", fill = F, stringsAsFactors = F, header = F, fileEncoding="ISO-8859-1")
 CIP_data <- read.csv("CIP_Data.csv", sep=";", stringsAsFactors = FALSE)
-CIP_dosage <- read.csv("../CIP_Dosage.csv", sep=";", stringsAsFactors = FALSE)
+CIP_dosage <- read.csv("CIP_Dosage.csv", sep=";", stringsAsFactors = FALSE)
 
 # Define UI for application
 ui <- fluidPage(
@@ -22,6 +22,7 @@ ui <- fluidPage(
         sidebarPanel(
             textInput("add_DCI", "DCI à ajouter"),
             actionButton("add_button", "Ajouter"),
+            actionButton("generate_button", "Générer le fichier Excel")
             #actionButton("show_modal", "Voir"),
             #checkboxGroupInput("forme_1", label=NULL, choices=c(1,2,3), selected=c(1,2)),
             #pickerInput("test_select", "Test", paste0("Forme injectable pour perfusion numero ",c(1:10)),
@@ -35,8 +36,7 @@ ui <- fluidPage(
                 tabPanel("DCI", DT::dataTableOutput("table_DCI")),
                 tabPanel("Dosages", DT::dataTableOutput("table_Dosage")),
                 tabPanel("Fichier", DT::dataTableOutput("table_fichier"))
-            ),
-            actionButton("generate_button", "Générer le fichier Excel")
+            )
         )
     )
     
@@ -246,9 +246,11 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$generate_button, {
-        output$text_generate <- renderText("Vous vous apprêtez à générer le fichier Excel
-                                           des resultats. Veuillez vous assurer que les dosages
-                                           sont corrects.")
+        output$text_generate <- renderText("Avez-vous bien vérifié que les
+                                           informations de l'onglet Dosages sont correctes ?
+                                           Elles contiennent des informations sur les CIP7 non
+                                           rencontrés jusqu'à présent. Ces informations
+                                           seront enregistrées dans le système et non modifiables.")
         showModal(modalDialog(
             title = "Generation du fichier Excel",
             textOutput("text_generate"),
@@ -262,19 +264,28 @@ server <- function(input, output, session) {
     output$download <- downloadHandler(filename = "Point_Stock.csv", content = function(file) {
         removeModal()
         df_fichier <- react$df_fichier()
-        df_fichier["Stock à date (boites)"] <- ""
-        df_fichier["Ventes J-1 (boites)"] <- ""
-        df_fichier["Conso Mensuelle Habituelle (boites)"] <- ""
-        df_fichier["Appro S16 (boites)"] <- ""
-        df_fichier["Appro S17 (boites)"] <- ""
-        df_fichier["Appro S18 (boites)"] <- ""
-        df_fichier["Appro S19 (boites)"] <- ""
-        df_fichier["Appro S20 (boites)"] <- ""
-        df_fichier["Appro S21 (boites)"] <- ""
-        df_fichier["Appro S22 (boites)"] <- ""
-        df_fichier["Commentaires"] <- ""
-        write.table(df_fichier, file, sep=";", row.names=FALSE)
-    })
+        if(nrow(df_fichier) > 0) {
+            df_fichier["Stock à date (boites)"] <- ""
+            df_fichier["Ventes J-1 (boites)"] <- ""
+            df_fichier["Conso Mensuelle Habituelle (boites)"] <- ""
+            df_fichier["Appro S16 (boites)"] <- ""
+            df_fichier["Appro S17 (boites)"] <- ""
+            df_fichier["Appro S18 (boites)"] <- ""
+            df_fichier["Appro S19 (boites)"] <- ""
+            df_fichier["Appro S20 (boites)"] <- ""
+            df_fichier["Appro S21 (boites)"] <- ""
+            df_fichier["Appro S22 (boites)"] <- ""
+            df_fichier["Commentaires"] <- ""
+            write.table(df_fichier, file, sep=";", row.names=FALSE)
+        }
+        
+        if(nrow(react$df_new_dosage()) > 0) {
+            df_dosage <- rbind(CIP_dosage, react$df_new_dosage()[c("CIP7", "Dosage", "Unites")])
+        } else {
+            df_dosage <- CIP_dosage
+        }
+        write.table(df_dosage, "CIP_Dosage.csv", sep=";", row.names=FALSE)
+    }, contentType = "text/csv")
 }
 
 # Run the application 
