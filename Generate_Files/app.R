@@ -2,9 +2,11 @@ library(shiny)
 library(DT)
 library(stringi)
 library(shinyWidgets)
+library(plyr)
 
 #CIS <- read.delim(file = "CIS_bdpm.txt", quote = "", fill = F, stringsAsFactors = F, header = F, fileEncoding="ISO-8859-1")
 CIP_data <- read.csv("CIP_Data.csv", sep=";", stringsAsFactors = FALSE)
+CIP_dosage <- read.csv("../CIP_Dosage.csv", sep=";", stringsAsFactors = FALSE)
 
 # Define UI for application
 ui <- fluidPage(
@@ -32,7 +34,7 @@ ui <- fluidPage(
             tabsetPanel(
                 tabPanel("DCI", DT::dataTableOutput("table_DCI")),
                 tabPanel("Dosages", DT::dataTableOutput("table_Dosage")),
-                tabPanel("Fichier", DT::dataTableOutput("table_CIP"))
+                tabPanel("Fichier", DT::dataTableOutput("table_fichier"))
             ),
             actionButton("generate_button", "Générer le fichier Excel")
         )
@@ -60,15 +62,63 @@ server <- function(input, output, session) {
     
     react <- reactiveValues()
     react$df_DCI <- data.frame(stringsAsFactors = FALSE)
-    react$df_new_dosage = data.frame(CIP7 = character(), New_Dosage = character())
-    #react$df_CIP <- data.frame(stringsAsFactors = FALSE)
-    #react$df_Dosage <- data.frame(
-    #                         CIP7 = c(1,2,3,4),
-    #                         Dosage = c("50mg", "100mg", "200mg", "300mg"),
-    #                         New_Dosage = c("50mg", "100mg", "200mg", "300mg"),
-    #                         Actions = shinyInput(actionButton, 4, 1, "button_", label = "Modifier",
-    #                                              onclick = 'Shiny.onInputChange(\"modify_dosage_button\",  this.id)'),
-    #                         stringsAsFactors = FALSE)
+    react$df_user_dosage = data.frame(CIP7 = character(), Dosage = character(), Unites = character(),
+                                     stringsAsFactors = F)
+    
+    react$df_Dosage <- reactive({
+        selected_CIP7 <- if(nrow(react$df_DCI) > 0) {
+            unlist(lapply(1:nrow(react$df_DCI), function(i) {
+                CIP_data$CIP7[CIP_data$DCI == react$df_DCI$DCI[i] &
+                                  CIP_data$Forme %in% strsplit(react$df_DCI$Formes[i],"<br>")[[1]]]
+            }))
+        } else character()
+        
+        data.frame(
+            CIP7 = selected_CIP7,
+            Dosage = sapply(selected_CIP7, function(i) {
+                if(i %in% CIP_dosage$CIP7) {
+                    CIP_dosage$Dosage[CIP_dosage$CIP7 == i]
+                } else if(i %in% react$df_user_dosage$CIP7) {
+                    react$df_user_dosage$Dosage[react$df_user_dosage$CIP7 == i]
+                } else {
+                    CIP_data$Dosage[CIP_data$CIP7 == i]
+                }
+            }),
+            Unites = sapply(selected_CIP7, function(i) {
+                if(i %in% CIP_dosage$CIP7) {
+                    CIP_dosage$Unites[CIP_dosage$CIP7 == i]
+                } else if(i %in% react$df_user_dosage$CIP7) {
+                    react$df_user_dosage$Unites[react$df_user_dosage$CIP7 == i]
+                } else {
+                    CIP_data$Unites[CIP_data$CIP7 == i]
+                }
+            }),
+            stringsAsFactors = F
+        )
+    })
+    
+    react$df_new_dosage <- reactive({
+        selected_CIP7 <- setdiff(react$df_Dosage()$CIP7, CIP_dosage$CIP7)
+        data.frame(
+            CIP7 = selected_CIP7,
+            Specialite = CIP_data$Specialite[CIP_data$CIP7 %in% selected_CIP7],
+            Presentation = CIP_data$Presentation[CIP_data$CIP7 %in% selected_CIP7],
+            Dosage = react$df_Dosage()$Dosage[react$df_Dosage()$CIP7 %in% selected_CIP7],
+            Unites = react$df_Dosage()$Unites[react$df_Dosage()$CIP7 %in% selected_CIP7],
+            Actions = shinyInput(actionButton, length(selected_CIP7), 1, "button_", label = "Modifier",
+                                 onclick = 'Shiny.onInputChange(\"modify_dosage_button\",  this.id)')
+        )
+    })
+    
+    react$df_fichier <- reactive({
+        df_fichier <- merge(react$df_Dosage(), CIP_data, by="CIP7", all.x=TRUE) #CIP_data[CIP_data$CIP7 %in% react$df_Dosage()$CIP7,]
+        df_fichier$Dosage <- df_fichier$Dosage.x
+        df_fichier$Unites <- df_fichier$Unites.x
+        column_order <- c("Laboratoire",
+                          setdiff(colnames(df_fichier),
+                                  c("Laboratoire", "Dosage.x", "Dosage.y", "Unites.x", "Unites.y")))
+        df_fichier <- df_fichier[,column_order]
+    })
     
     output$table_DCI = DT::renderDataTable({
         react$df_DCI
@@ -82,42 +132,9 @@ server <- function(input, output, session) {
                                                drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
                                            ))
     
-    output$table_CIP = DT::renderDataTable({
-        CIP_data[sapply(1:nrow(CIP_data), function(i) {
-            if(CIP_data$DCI[i] %in% react$df_DCI$DCI){
-                row_name <- row.names(react$df_DCI)[which(CIP_data$DCI[i] == react$df_DCI$DCI)]
-                return(CIP_data$Forme[i] %in% strsplit(react$df_DCI[row_name,"Formes"],"<br>")[[1]])
-            } else {
-                return(FALSE)
-            }
-        }),]
-    }, rownames = FALSE)
+    output$table_fichier = DT::renderDataTable(react$df_fichier(), rownames = FALSE)
     
-    output$table_Dosage = DT::renderDataTable({
-        selected_CIP7 <- CIP_data[sapply(1:nrow(CIP_data), function(i) {
-            if(CIP_data$DCI[i] %in% react$df_DCI$DCI){
-                row_name <- row.names(react$df_DCI)[which(CIP_data$DCI[i] == react$df_DCI$DCI)]
-                return(CIP_data$Forme[i] %in% strsplit(react$df_DCI[row_name,"Formes"],"<br>")[[1]])
-            } else {
-                return(FALSE)
-            }
-        }), "CIP7"]
-        react$df_Dosage <- data.frame(
-            CIP7 = selected_CIP7,
-            Specialite = as.character(CIP_data$Specialite[CIP_data$CIP7 %in% selected_CIP7]),
-            Presentation = as.character(CIP_data$Presentation[CIP_data$CIP7 %in% selected_CIP7]),
-            Dosage = as.character(CIP_data$Dosage[CIP_data$CIP7 %in% selected_CIP7]),
-            New_Dosage = sapply(selected_CIP7, function(CIP) {
-                if(CIP %in% react$df_new_dosage$CIP7) {
-                    return(react$df_new_dosage$New_Dosage[react$df_new_dosage$CIP7 == CIP])
-                } else {
-                    return(CIP_data$Dosage[CIP_data$CIP7 == CIP])
-                }
-            }),
-            Actions = shinyInput(actionButton, length(selected_CIP7), 1, "button_", label = "Modifier",
-                                 onclick = 'Shiny.onInputChange(\"modify_dosage_button\",  this.id)')
-        )
-    },
+    output$table_Dosage = DT::renderDataTable(react$df_new_dosage(),
         selection="multiple",
         rownames = TRUE,
         escape = FALSE,
@@ -141,37 +158,14 @@ server <- function(input, output, session) {
     #    print(input$forme_1)
     #})
     
-    observeEvent(input$validate_button, {
-        selectedRow <- as.character(strsplit(input$validate_button, "_")[[1]][2])
-        print(selectedRow)
-        print(input[[paste0("dosage_",selectedRow)]])
-        react$df_Dosage[selectedRow,"New_Dosage"] <- as.character(input[[paste0("dosage_",selectedRow)]])
-        #updateActionButton(session,paste0("button_",selectedRow), label = "Modifier")
-        react$df_Dosage[selectedRow,"Actions"] <- as.character({
-            actionButton(paste0("button_",selectedRow), label = "Modifier",
-                         onclick = 'Shiny.onInputChange(\"modify_dosage_button\",  this.id)')
-        })
-        #print(input$dosage_1)
-        #print(input$validate_button)
-    })
-    
     observeEvent(input$modify_dosage_button, {
-        react$selectedRow <- as.character(strsplit(input$modify_dosage_button, "_")[[1]][2])
-        #react$df_Dosage[selectedRow, "New_Dosage"] <- as.character({
-        #    textInput(paste0("dosage_",selectedRow),
-        #              value = input[[paste0("dosage_",selectedRow)]], label = NULL)
-        #})
-        #updateActionButton(session,paste0("button_",selectedRow), label = "Modifier")
-        #react$df_Dosage[selectedRow,"Actions"] <- as.character({
-        #    actionButton(paste0("button_",selectedRow), label = "Valider",
-        #                 onclick = 'Shiny.onInputChange(\"validate_button\",  this.id)')
-        #})
-        #print(input$dosage_1)
-        #print(input$validate_button)
+        react$selectedRow <- as.numeric(strsplit(input$modify_dosage_button, "_")[[1]][2])
         showModal(modalDialog(
             title = "",
             textInput("dosage", label = "Veuillez entrer un nouveau dosage",
-                                value = react$df_Dosage[react$selectedRow, "New_Dosage"]),
+                                value = react$df_new_dosage()$Dosage[react$selectedRow]),
+            textInput("unites", label = "Veuillez entrer un nouveau nombre d'unites par boite",
+                                value = react$df_new_dosage()$Unites[react$selectedRow]),
             footer = tagList(
                 modalButton("Annuler"),
                 actionButton("modal_dosage_ok", "OK")
@@ -183,16 +177,18 @@ server <- function(input, output, session) {
     observeEvent(input$modal_dosage_ok, {
         removeModal()
         #print(react$df_DCI[react$selectedRow, "Formes"])
-        if(react$df_Dosage[react$selectedRow, "CIP7"] %in% react$df_new_dosage$CIP7) {
-            react$df_new_dosage$New_Dosage[react$df_new_dosage$CIP7 == react$df_Dosage[react$selectedRow, "CIP7"]] <- input$dosage
+        if(react$df_new_dosage()$CIP7[react$selectedRow] %in% react$df_user_dosage$CIP7) {
+            react$df_user_dosage$Dosage[react$df_user_dosage$CIP7 == react$df_new_dosage()$CIP7[react$selectedRow]] <- input$dosage
+            react$df_user_dosage$Unites[react$df_user_dosage$CIP7 == react$df_new_dosage()$CIP7[react$selectedRow]] <- input$unites
         } else {
-            react$df_new_dosage <- rbind(react$df_new_dosage, data.frame(
-                CIP7 = react$df_Dosage[react$selectedRow, "CIP7"],
-                New_Dosage = input$dosage,
+            react$df_user_dosage <- rbind(react$df_user_dosage, data.frame(
+                CIP7 = react$df_new_dosage()$CIP7[react$selectedRow],
+                Dosage = input$dosage,
+                Unites = input$unites,
                 stringsAsFactors = FALSE
             ))
         }
-        print(react$df_new_dosage)
+        print(react$df_user_dosage)
     })
     
     observeEvent(input$modify_button, {
@@ -229,42 +225,57 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$add_button, {
-        #print(input$add_DCI)
         start <- if(nrow(react$df_DCI) == 0) 1 else max(as.numeric(row.names(react$df_DCI)))+1
         CIP_to_add <- CIP_data[grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),CIP_data$DCI, ignore.case = TRUE),]
         CIP_to_add <- CIP_to_add[!CIP_to_add$DCI %in% react$df_DCI$DCI,]
-        #View(CIP_to_add)
+
         if(nrow(CIP_to_add) > 0) {
             DCI_to_add <- data.frame(DCI=unique(CIP_to_add$DCI), stringsAsFactors = FALSE)
         
             DCI_to_add$Formes <- sapply(1:nrow(DCI_to_add), function(i) {
                 paste0(unique(CIP_to_add$Forme[CIP_to_add$DCI == DCI_to_add$DCI[i]]),collapse="<br>")
             })
-                #sapply(1:nrow(DCI_to_add), function(i){
-                #as.character(checkboxGroupInput(paste0("forme_",start+i-1),label=NULL,
-                #                                choices=unique(CIP_to_add$Forme[CIP_to_add$DCI == DCI_to_add$DCI[i]]),
-                #                                selected=selected$x_1))#unique(CIP_to_add$Forme[CIP_to_add$DCI == DCI_to_add$DCI[i]])))
-            #})
-                
-            #print("OK")
             DCI_to_add$Actions <- paste0(shinyInput(actionButton, nrow(DCI_to_add), start, "button_", label = "Modifier les formes",
                                              onclick = 'Shiny.onInputChange(\"modify_button\",  this.id)'), "  ",
                                          shinyInput(actionButton, nrow(DCI_to_add), start, "button_", label = "Supprimer",
                                                     onclick = 'Shiny.onInputChange(\"delete_button\",  this.id)'))
-            #View(DCI_to_add)
-            #sapply(CIP_from_DCI$CIP7, function(x) {
-            #    return(as.character(actionButton(paste0("button_", x), label = "Supprimer",
-            #                              mononclick = 'Shiny.onInputChange(\"select_button\",  this.id)')))
-            #})
-            #View(CIP_from_DCI)
             row.names(DCI_to_add) <- as.character(start:(start+nrow(DCI_to_add)-1))
             react$df_DCI <- rbind(react$df_DCI, DCI_to_add)
-            #df$CIP <- rbind(df$CIP, CIP_to_add)
         }
         updateTextInput(session, "add_DCI", value = "")
+    })
+    
+    observeEvent(input$generate_button, {
+        output$text_generate <- renderText("Vous vous apprêtez à générer le fichier Excel
+                                           des resultats. Veuillez vous assurer que les dosages
+                                           sont corrects.")
+        showModal(modalDialog(
+            title = "Generation du fichier Excel",
+            textOutput("text_generate"),
+            footer = tagList(
+                modalButton("Annuler"),
+                downloadButton("download", "Telecharger")
+            )
+        ))
+    })
+    
+    output$download <- downloadHandler(filename = "Point_Stock.csv", content = function(file) {
+        removeModal()
+        df_fichier <- react$df_fichier()
+        df_fichier["Stock à date (boites)"] <- ""
+        df_fichier["Ventes J-1 (boites)"] <- ""
+        df_fichier["Conso Mensuelle Habituelle (boites)"] <- ""
+        df_fichier["Appro S16 (boites)"] <- ""
+        df_fichier["Appro S17 (boites)"] <- ""
+        df_fichier["Appro S18 (boites)"] <- ""
+        df_fichier["Appro S19 (boites)"] <- ""
+        df_fichier["Appro S20 (boites)"] <- ""
+        df_fichier["Appro S21 (boites)"] <- ""
+        df_fichier["Appro S22 (boites)"] <- ""
+        df_fichier["Commentaires"] <- ""
+        write.table(df_fichier, file, sep=";", row.names=FALSE)
     })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
