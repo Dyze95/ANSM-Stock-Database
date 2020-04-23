@@ -225,10 +225,38 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$add_button, {
+        nb_new_DCI <- sum(grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),setdiff(unique(CIP_data$DCI),react$df_DCI$DCI), ignore.case = TRUE))
+        
+        output$text_add_warning <- renderText({
+        paste0("Vous êtes sûr le point d'ajouter ",
+               nb_new_DCI, " nouveaux DCI. Confirmez-vous cette saisie ?")
+        })
+        
+        if(nb_new_DCI > 19) {
+            showModal(modalDialog(
+                title ="Attention",
+                textOutput("text_add_warning"),
+                footer = tagList(
+                    actionButton("modal_add_no", "Non"),
+                    actionButton("modal_add_ok", "Oui")
+                )
+            ))
+        } else {
+           add_DCI() 
+        }
+    })
+    
+    observeEvent(input$modal_add_ok, {removeModal(); add_DCI()})
+    observeEvent(input$modal_add_no, {
+        removeModal()
+        updateTextInput(session, "add_DCI", value = "")
+    })
+    
+    add_DCI <- function() {  
         start <- if(nrow(react$df_DCI) == 0) 1 else max(as.numeric(row.names(react$df_DCI)))+1
         CIP_to_add <- CIP_data[grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),CIP_data$DCI, ignore.case = TRUE),]
         CIP_to_add <- CIP_to_add[!CIP_to_add$DCI %in% react$df_DCI$DCI,]
-
+        
         if(nrow(CIP_to_add) > 0) {
             DCI_to_add <- data.frame(DCI=unique(CIP_to_add$DCI), stringsAsFactors = FALSE)
         
@@ -243,7 +271,7 @@ server <- function(input, output, session) {
             react$df_DCI <- rbind(react$df_DCI, DCI_to_add)
         }
         updateTextInput(session, "add_DCI", value = "")
-    })
+    }
     
     observeEvent(input$generate_button, {
         textInputInline <- function(inputId, label, value = NULL) {
