@@ -246,14 +246,37 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$generate_button, {
+        textInputInline <- function(inputId, label, value = NULL) {
+            tags$tr(width = "100%",
+                tags$td(width = "40%", div(strong(label))),
+                tags$td(width = "60%", textInput(inputId, label = NULL, value = value)))
+        }
+        
+        
         output$text_generate <- renderText("Avez-vous bien vérifié que les
                                            informations de l'onglet Dosages sont correctes ?
                                            Elles contiennent des informations sur les CIP7 non
                                            rencontrés jusqu'à présent. Ces informations
                                            seront enregistrées dans le système et non modifiables.")
+        output$text_column <- renderText("Veuillez choisir ci-dessous les noms de colonnes
+                                         qui seront affichées dans le fichier.")
         showModal(modalDialog(
             title = "Generation du fichier Excel",
             textOutput("text_generate"),
+            textOutput("text_columns"),
+            h3(""),
+            tags$table(width="80%",
+                       textInputInline("column_1", "Colonne 1 : ", value = "Stock à date (boîtes)"),
+                       textInputInline("column_2", "Colonne 2 : ", value = "Ventes J-1 (boites)"),
+                       textInputInline("column_3", "Colonne 3 : ", value = "Conso Mensuelle Habituelle (boites)"),
+                       textInputInline("column_4", "Colonne 4 : ", value = "Approvisionnement S16 (boites)"),
+                       textInputInline("column_5", "Colonne 5 : ", value = "Approvisionnement S17 (boites)"),
+                       textInputInline("column_6", "Colonne 6 : ", value = "Approvisionnement S18 (boites)"),
+                       textInputInline("column_7", "Colonne 7 : ", value = "Approvisionnement S19 (boites)"),
+                       textInputInline("column_8", "Colonne 8 : ", value = "Approvisionnement S20 (boites)"),
+                       textInputInline("column_9", "Colonne 9 : ", value = "Approvisionnement S21 (boites)"),
+                       textInputInline("column_10", "Colonne 10 : ", value = "Commentaires")
+            ),
             footer = tagList(
                 modalButton("Annuler"),
                 downloadButton("download", "Telecharger")
@@ -265,17 +288,16 @@ server <- function(input, output, session) {
         removeModal()
         df_fichier <- react$df_fichier()
         if(nrow(df_fichier) > 0) {
-            df_fichier["Stock à date (boites)"] <- ""
-            df_fichier["Ventes J-1 (boites)"] <- ""
-            df_fichier["Conso Mensuelle Habituelle (boites)"] <- ""
-            df_fichier["Appro S16 (boites)"] <- ""
-            df_fichier["Appro S17 (boites)"] <- ""
-            df_fichier["Appro S18 (boites)"] <- ""
-            df_fichier["Appro S19 (boites)"] <- ""
-            df_fichier["Appro S20 (boites)"] <- ""
-            df_fichier["Appro S21 (boites)"] <- ""
-            df_fichier["Appro S22 (boites)"] <- ""
-            df_fichier["Commentaires"] <- ""
+            df_fichier[input$column_1] <- ""
+            df_fichier[input$column_2] <- ""
+            df_fichier[input$column_3] <- ""
+            df_fichier[input$column_4] <- ""
+            df_fichier[input$column_5] <- ""
+            df_fichier[input$column_6] <- ""
+            df_fichier[input$column_7] <- ""
+            df_fichier[input$column_8] <- ""
+            df_fichier[input$column_9] <- ""
+            df_fichier[input$column_10] <- ""
             write.table(df_fichier, file, sep=";", row.names=FALSE)
         }
         
