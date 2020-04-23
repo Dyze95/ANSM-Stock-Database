@@ -33,7 +33,7 @@ getDosage <- function(codeCIS) {
   }
 }
 
-CIS$DCI <- sapply(CIS$V1, function(i) {paste0(getDCI(i), collapse = ";")})
+CIS$DCI <- sapply(CIS$V1, function(i) {stri_trans_general(paste0(getDCI(i), collapse = ";"), "Latin-ASCII")})
 CIS$Dosage <- sapply(CIS$V1, function(i) {paste0(getDosage(i), collapse = ";")})
 CIS$Dosage <- sapply(CIS$Dosage, function(dosage) { gsub("(?:(,[0-9]*?[1-9]+)|,)0*", "\\1",
                                                          gsub(" ", "", dosage))})
