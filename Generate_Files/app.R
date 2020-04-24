@@ -122,21 +122,22 @@ server <- function(input, output, session) {
     
     output$table_DCI = DT::renderDataTable({
         react$df_DCI
-    }, rownames = FALSE, escape=FALSE,
-                                           options = list(
-                                               dom = 'BRrltpi',
-                                               autoWidth=TRUE,
-                                               #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                                               ColReorder = TRUE,
-                                               preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
-                                               drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
-                                           ))
+    }, rownames = FALSE, escape=FALSE, server=FALSE,
+       options = list(
+           dom = 'BRrltpi',
+           autoWidth=TRUE,
+           displayStart=react$previous_DCI_page,
+           #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+           #ColReorder = TRUE,
+           preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
+           drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
+       ))
     
     output$table_fichier = DT::renderDataTable(react$df_fichier(), rownames = FALSE)
     
     output$table_Dosage = DT::renderDataTable(react$df_new_dosage(),
         selection="multiple",
-        rownames = TRUE,
+        rownames = FALSE,
         escape = FALSE,
         options = list(
             dom = 'BRrltpi',
@@ -214,6 +215,8 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$delete_button, {
+        react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
+        print(react$previous_DCI_page)
         selectedRow <- as.character(strsplit(input$delete_button, "_")[[1]][2])
         #print(selectedRow)
         #print(input$select_button)
