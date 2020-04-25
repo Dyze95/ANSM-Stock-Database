@@ -133,7 +133,7 @@ corrections_exploitant <- rbind(corrections_exploitant,
 corrections_exploitant <- rbind(corrections_exploitant,
                                 data.frame(CIS=68818192, Laboratoire="SANOFI AVENTIS FRANCE"))
 for(i in corrections_exploitant$CIS) {
-  CIP_data$Laboratoire[CIP_data$CIS == i] <- corrections_exploitant$Laboratoire[corrections_exploitant$CIS == i]
+  CIP_data$Laboratoire[CIP_data$CIS == i] <- as.character(corrections_exploitant$Laboratoire[corrections_exploitant$CIS == i])
 }
 
 
