@@ -10,8 +10,8 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      textInput("add_DCI", "DCI à ajouter"),
-      actionButton("add_button", "Ajouter"),
+      text_DCI_input("DCI"),
+      add_DCI_button("DCI"),
       actionButton("generate_button", "Générer le fichier Excel")
       #actionButton("show_modal", "Voir"),
       #checkboxGroupInput("forme_1", label=NULL, choices=c(1,2,3), selected=c(1,2)),
@@ -23,8 +23,8 @@ ui <- fluidPage(
     
     mainPanel(
       tabsetPanel(
-        tabPanel("DCI", DT::dataTableOutput("table_DCI")),
-        tabPanel("Dosages", DT::dataTableOutput("table_Dosage")),
+        tabPanel("DCI", DCI_output("DCI")),
+        tabPanel("Dosages", new_dosage_output("dosage")),
         tabPanel("Fichier", DT::dataTableOutput("table_fichier"))
       )
     )
