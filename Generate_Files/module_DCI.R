@@ -5,7 +5,7 @@ DCI_output <- function(id) {
 
 text_DCI_input <- function(id) {
   ns <- NS(id)
-  textInput(ns("add_DCI"), "DCI à ajouter", pattern="[0-9]+")
+  textInput(ns("add_DCI"), "DCI à ajouter")
 }
 
 add_DCI_button<- function(id) {

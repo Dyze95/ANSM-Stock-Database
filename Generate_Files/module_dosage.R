@@ -86,14 +86,25 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
       title = "",
       textInput(ns("dosage"), label = "Veuillez entrer un nouveau dosage",
                 value = df_new_dosage()$Dosage[react$selectedRow]),
-      textInput(ns("unites"), label = "Veuillez entrer un nouveau nombre d'unites par boite",
-                value = df_new_dosage()$Unites[react$selectedRow]),
+      uiOutput(ns("error_dosage")),
+      numericInput(ns("unites"), label = "Veuillez entrer un nouveau nombre d'unites par boite",
+                value = df_new_dosage()$Unites[react$selectedRow], min = 1),
       footer = tagList(
         modalButton("Annuler"),
         actionButton(ns("modal_dosage_ok"), "OK")
       )
     ))
     session$sendCustomMessage(type = 'resetInputValue', message = ns("modify_dosage_button"))
+  })
+  
+  observeEvent(input$dosage, {
+    if(grepl("^[0-9,]+mg$", input$dosage) || grepl("^[0-9,]+mg/mL;[0-9,]+mL$", input$dosage)) {
+      runjs("document.getElementById('dosage-dosage').style.border = ''")
+      output$error_dosage <- NULL
+    } else {
+      runjs("document.getElementById('dosage-dosage').style.border = 'solid red'")
+      output$error_dosage <- renderUI(p("Attention, les dosages sont en general au format Xmg ou Xmg/mL;YmL", style = "color:red;font-size:10px"))
+    }
   })
   
   observeEvent(input$modal_dosage_ok, {

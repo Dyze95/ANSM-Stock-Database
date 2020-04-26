@@ -1,6 +1,6 @@
 # Define UI for application
 ui <- fluidPage(
-  
+  useShinyjs(),
   tags$script("Shiny.addCustomMessageHandler('resetInputValue', function(variableName){
                 Shiny.onInputChange(variableName, null);
                 });
