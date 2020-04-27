@@ -92,7 +92,7 @@ module_DCI <- function(input, output, session, CIP_data) {
   observeEvent(input$modal_add_ok, {removeModal(); add_DCI()})
   observeEvent(input$modal_add_no, {
     removeModal()
-    updateTextInput(session, ns("add_DCI"), value = "")
+    updateTextInput(session, "add_DCI", value = "")
   })
   
   add_DCI <- function() {  
@@ -113,7 +113,7 @@ module_DCI <- function(input, output, session, CIP_data) {
       row.names(DCI_to_add) <- as.character(start:(start+nrow(DCI_to_add)-1))
       react$df_DCI <- rbind(DCI_to_add, react$df_DCI)
     }
-    updateTextInput(session, ns("add_DCI"), value = "")
+    updateTextInput(session, "add_DCI", value = "")
   }
   
   return(reactive(react$df_DCI))
