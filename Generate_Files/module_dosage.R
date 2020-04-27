@@ -18,6 +18,7 @@ shinyInput <- function(FUN, len, start, id, ...) {
 module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) {
   ns <- session$ns
   react <- reactiveValues(selectedRow = 0,
+                          previous_page = NULL,
                           df_user_dosage = data.frame(CIP7 = character(), Dosage = character(), Unites = character(),
                                                       stringsAsFactors = F))
   
@@ -67,12 +68,12 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
   })
   
   output$table_Dosage <- DT::renderDataTable(df_new_dosage(),
-                                            selection="multiple",
                                             rownames = FALSE,
                                             escape = FALSE,
                                             options = list(
                                               dom = 'BRrltpi',
                                               autoWidth=TRUE,
+                                              displayStart=react$previous_page,
                                               #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                                               ColReorder = TRUE,
                                               preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
@@ -81,6 +82,7 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
   )
   
   observeEvent(input$modify_dosage_button, {
+    react$previous_page <- input$table_Dosage_rows_current[1] - 1
     react$selectedRow <- as.numeric(strsplit(input$modify_dosage_button, "_")[[1]][2])
     showModal(modalDialog(
       title = "",
