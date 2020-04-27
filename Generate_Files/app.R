@@ -4,8 +4,39 @@ library(DT)
 library(stringi)
 library(plyr)
 
+source("module_DCI.R")
+source("module_dosage.R")
+source("module_fichier.R")
+
 CIP_data <- read.csv("CIP_Data.csv", sep=";", stringsAsFactors = FALSE)
 CIP_dosage <- read.csv("CIP_Dosage.csv", sep=";", stringsAsFactors = FALSE)
+
+# Define UI for application
+ui <- fluidPage(
+  useShinyjs(),
+  tags$script("Shiny.addCustomMessageHandler('resetInputValue', function(variableName){
+                Shiny.onInputChange(variableName, null);
+                });
+                "),
+  
+  titlePanel("DCI"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      text_DCI_input("DCI"),
+      add_DCI_button("DCI"),
+      file_generate_button("fichier")
+    ),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("DCI", DCI_output("DCI")),
+        tabPanel("Dosages", new_dosage_output("dosage")),
+        tabPanel("Fichier", file_output("fichier"))
+      )
+    )
+  )
+)
 
 # Define server logic
 server <- function(input, output, session) {
@@ -31,3 +62,5 @@ server <- function(input, output, session) {
   
   callModule(module_fichier, "fichier", react$df_Dosage, react$df_new_dosage, CIP_data, CIP_dosage)
 }
+
+shinyApp(ui, server)
