@@ -68,6 +68,9 @@ module_DCI <- function(input, output, session, CIP_data) {
   })
   
   observeEvent(input$add_button, {
+    if(!is.null(input$table_DCI_rows_current[1])) {
+      react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
+    }
     nb_new_DCI <- sum(grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),setdiff(unique(CIP_data$DCI),react$df_DCI$DCI), ignore.case = TRUE))
     
     output$text_add_warning <- renderText({
