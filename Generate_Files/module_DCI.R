@@ -123,7 +123,7 @@ module_DCI <- function(input, output, session, CIP_data) {
                                    shinyInput(actionButton, nrow(DCI_to_add), start, "button_", label = "Supprimer",
                                               onclick = paste0("Shiny.onInputChange(\"",ns("delete_button"), "\",  this.id)")))
       row.names(DCI_to_add) <- as.character(start:(start+nrow(DCI_to_add)-1))
-      react$df_DCI <- rbind(react$df_DCI, DCI_to_add)
+      react$df_DCI <- rbind(DCI_to_add, react$df_DCI)
     }
     updateTextInput(session, ns("add_DCI"), value = "")
   }
