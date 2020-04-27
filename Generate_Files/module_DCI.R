@@ -14,8 +14,6 @@ add_DCI_button<- function(id) {
 }
 
 shinyInput <- function(FUN, len, start, id, ...) {
-  #print(len)
-  #print(start)
   inputs <- character(len)
   if(len > 0) {
     for (i in 1:len) {
@@ -31,18 +29,14 @@ module_DCI <- function(input, output, session, CIP_data) {
                           previous_DCI_page = NULL,
                           df_DCI = data.frame(stringsAsFactors = FALSE))
   
-  output$table_DCI = DT::renderDataTable({
-    react$df_DCI
-  }, rownames = FALSE, escape=FALSE, server=FALSE,
-  options = list(
-    dom = 'BRrltpi',
-    autoWidth=TRUE,
-    displayStart=react$previous_DCI_page,
-    #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-    #ColReorder = TRUE,
-    preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
-    drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
-  ))
+  output$table_DCI = DT::renderDataTable(react$df_DCI, rownames = FALSE, escape=FALSE, server=FALSE,
+    options = list(
+      dom = 'BRrltpi',
+      autoWidth=TRUE,
+      displayStart=react$previous_DCI_page,
+      preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
+      drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
+    ))
   
   observeEvent(input$modify_button, {
     react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
@@ -63,20 +57,14 @@ module_DCI <- function(input, output, session, CIP_data) {
   
   observeEvent(input$modal_ok, {
     removeModal()
-    #print(react$df_DCI[react$selectedRow, "Formes"])
     react$df_DCI[react$selectedRow, "Formes"] <- paste0(input$modal_forme,collapse="<br>")
   })
   
   observeEvent(input$delete_button, {
     react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
     selectedRow <- as.character(strsplit(input$delete_button, "_")[[1]][2])
-    #print(selectedRow)
-    #print(input$select_button)
     DCI <- react$df_DCI[selectedRow, "DCI"]
-    #print(DCI)
     react$df_DCI <- react$df_DCI[row.names(react$df_DCI) != selectedRow,]
-    #print(df$DCI)
-    #df$CIP <- df$CIP[df$CIP$DCI != DCI,]
   })
   
   observeEvent(input$add_button, {

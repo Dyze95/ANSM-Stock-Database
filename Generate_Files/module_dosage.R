@@ -4,8 +4,6 @@ new_dosage_output <- function(id) {
 }
 
 shinyInput <- function(FUN, len, start, id, ...) {
-  #print(len)
-  #print(start)
   inputs <- character(len)
   if(len > 0) {
     for (i in 1:len) {

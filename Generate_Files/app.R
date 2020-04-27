@@ -19,7 +19,7 @@ ui <- fluidPage(
                 });
                 "),
   
-  titlePanel("DCI"),
+  titlePanel("Création des fichiers de suivi"),
   
   sidebarLayout(
     sidebarPanel(
@@ -40,27 +40,14 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session) {
+
+  df_DCI <- callModule(module_DCI, "DCI", CIP_data)
   
-  shinyInput <- function(FUN, len, start, id, ...) {
-    #print(len)
-    #print(start)
-    inputs <- character(len)
-    if(len > 0) {
-      for (i in 1:len) {
-        inputs[i] <- as.character(FUN(paste0(id, i-1+start), ...))
-      }
-    }
-    inputs
-  }
+  tmp <- callModule(module_dosage, "dosage", df_DCI, CIP_data, CIP_dosage)
+  df_dosage <- tmp[[1]]
+  df_new_dosage <- tmp[[2]]
   
-  react <- reactiveValues()
-  react$df_DCI <- callModule(module_DCI, "DCI", CIP_data)
-  
-  tmp <- callModule(module_dosage, "dosage", react$df_DCI, CIP_data, CIP_dosage)
-  react$df_Dosage <- tmp[[1]]
-  react$df_new_dosage <- tmp[[2]]
-  
-  callModule(module_fichier, "fichier", react$df_Dosage, react$df_new_dosage, CIP_data, CIP_dosage)
+  callModule(module_fichier, "fichier", df_dosage, df_new_dosage, CIP_data, CIP_dosage)
 }
 
 shinyApp(ui, server)
