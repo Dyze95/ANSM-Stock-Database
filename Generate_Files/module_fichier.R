@@ -1,6 +1,6 @@
 file_generate_button <- function(id) {
   ns <- NS(id)
-  actionButton(ns("generate_button"), "Générer le fichier Excel")
+  actionButton(ns("generate_button"), "Générer le fichier Excel", style = "margin-top: 25px")
 }
 
 file_output <- function(id) {

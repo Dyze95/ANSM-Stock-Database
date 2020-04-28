@@ -10,7 +10,7 @@ text_DCI_input <- function(id) {
 
 add_DCI_button<- function(id) {
   ns <- NS(id)
-  actionButton(ns("add_button"), "Ajouter")
+  actionButton(ns("add_button"), "Ajouter", style = "margin-top: 25px")
 }
 
 shinyInput <- function(FUN, len, start, id, ...) {

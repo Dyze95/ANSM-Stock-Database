@@ -21,12 +21,12 @@ ui <- fluidPage(
   
   titlePanel("Création des fichiers de suivi"),
   
-  sidebarLayout(
-    sidebarPanel(
-      text_DCI_input("DCI"),
+  verticalLayout(
+    sidebarPanel(width = 6, fluidRow(
+      column(width = 7, text_DCI_input("DCI")),
       add_DCI_button("DCI"),
       file_generate_button("fichier")
-    ),
+    )),
     
     mainPanel(
       tabsetPanel(
