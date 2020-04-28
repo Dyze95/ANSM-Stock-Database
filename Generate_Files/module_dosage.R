@@ -53,16 +53,29 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
   })
 
   df_new_dosage <- reactive({
-    selected_CIP7 <- setdiff(df_dosage()$CIP7, CIP_dosage$CIP7)
-    data.frame(
-      CIP7 = selected_CIP7,
-      Specialite = CIP_data$Specialite[CIP_data$CIP7 %in% selected_CIP7],
-      Presentation = CIP_data$Presentation[CIP_data$CIP7 %in% selected_CIP7],
-      Dosage = df_dosage()$Dosage[df_dosage()$CIP7 %in% selected_CIP7],
-      Unites = df_dosage()$Unites[df_dosage()$CIP7 %in% selected_CIP7],
-      Actions = shinyInput(actionButton, length(selected_CIP7), 1, "button_", label = "Modifier",
-                           onclick = paste0("Shiny.onInputChange(\"",ns("modify_dosage_button"),"\",  this.id)"))
-    )
+    #selected_CIP7 <- setdiff(df_dosage()$CIP7, CIP_dosage$CIP7)
+    if(nrow(df_dosage()) > 0) {
+      df_new_dosage <- df_dosage()[!df_dosage()$CIP7 %in% CIP_dosage$CIP7,]
+      df_new_dosage <- merge(CIP_data[,c("CIP7", "Specialite", "Presentation")], df_new_dosage, by="CIP7", all.y=TRUE)
+      print(rownames(df_new_dosage))
+      df_new_dosage$Actions <- shinyInput(actionButton, nrow(df_new_dosage), 1, "button_", label = "Modifier",
+                                          onclick = paste0("Shiny.onInputChange(\"",ns("modify_dosage_button"),"\",  this.id)"))
+      df_new_dosage
+      } else {
+      df_new_dosage <- NULL
+    }
+    #df_new_dosage <- df_dosage()[!df_dosage()$CIP7 %in% CIP_dosage$CIP7,]
+    #print(df_dosage())
+    #df_new_dosage <- merge(df_new_dosage, CIP_data[,c("CIP7", "Specialite", "Presentation")], by="CIP7", all.x=TRUE)
+    # data.frame(
+    #   CIP7 = CIP_data$CIP7[CIP_data$CIP7 %in% selected_CIP7],
+    #   Specialite = CIP_data$Specialite[CIP_data$CIP7 %in% selected_CIP7],
+    #   Presentation = CIP_data$Presentation[CIP_data$CIP7 %in% selected_CIP7],
+    #   Dosage = df_dosage()$Dosage[df_dosage()$CIP7 %in% selected_CIP7],
+    #   Unites = df_dosage()$Unites[df_dosage()$CIP7 %in% selected_CIP7],
+    #   Actions = shinyInput(actionButton, length(selected_CIP7), 1, "button_", label = "Modifier",
+    #                        onclick = paste0("Shiny.onInputChange(\"",ns("modify_dosage_button"),"\",  this.id)"))
+    # )
   })
   
   output$table_Dosage <- DT::renderDataTable(df_new_dosage(),
