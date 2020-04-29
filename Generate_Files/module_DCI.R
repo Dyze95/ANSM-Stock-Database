@@ -27,6 +27,7 @@ module_DCI <- function(input, output, session, CIP_data) {
   ns <- session$ns
   react <- reactiveValues(selectedRow = "",
                           previous_DCI_page = NULL,
+                          CIP_to_add_logical = logical(),
                           df_DCI = data.frame(stringsAsFactors = FALSE))
   
   output$table_DCI = DT::renderDataTable(react$df_DCI, rownames = FALSE, escape=FALSE, server=FALSE,
@@ -71,7 +72,13 @@ module_DCI <- function(input, output, session, CIP_data) {
     if(!is.null(input$table_DCI_rows_current[1])) {
       react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
     }
-    nb_new_DCI <- sum(grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),setdiff(unique(CIP_data$DCI),react$df_DCI$DCI), ignore.case = TRUE))
+    
+    add_DCI_input <- trimws(strsplit(stri_trans_general(input$add_DCI, "Latin-ASCII"), "&")[[1]])
+    react$CIP_to_add_logical <- Reduce("|", lapply(add_DCI_input,
+                                             function(DCI) { grepl(DCI, CIP_data$DCI, ignore.case = TRUE) }))
+    
+    react$CIP_to_add_logical <- react$CIP_to_add_logical & !CIP_data$DCI %in% react$df_DCI$DCI
+    nb_new_DCI <- length(unique(CIP_data$DCI[react$CIP_to_add_logical]))
     
     output$text_add_warning <- renderText({
       paste0("Vous êtes sûr le point d'ajouter ",
@@ -100,8 +107,8 @@ module_DCI <- function(input, output, session, CIP_data) {
   
   add_DCI <- function() {  
     start <- if(nrow(react$df_DCI) == 0) 1 else max(as.numeric(row.names(react$df_DCI)))+1
-    CIP_to_add <- CIP_data[grepl(stri_trans_general(input$add_DCI, "Latin-ASCII"),CIP_data$DCI, ignore.case = TRUE),]
-    CIP_to_add <- CIP_to_add[!CIP_to_add$DCI %in% react$df_DCI$DCI,]
+    
+    CIP_to_add <- CIP_data[react$CIP_to_add_logical,]
     
     if(nrow(CIP_to_add) > 0) {
       DCI_to_add <- data.frame(DCI=unique(CIP_to_add$DCI), stringsAsFactors = FALSE)

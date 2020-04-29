@@ -57,7 +57,6 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
     if(nrow(df_dosage()) > 0) {
       df_new_dosage <- df_dosage()[!df_dosage()$CIP7 %in% CIP_dosage$CIP7,]
       df_new_dosage <- merge(CIP_data[,c("CIP7", "Specialite", "Presentation")], df_new_dosage, by="CIP7", all.y=TRUE)
-      print(rownames(df_new_dosage))
       df_new_dosage$Actions <- shinyInput(actionButton, nrow(df_new_dosage), 1, "button_", label = "Modifier",
                                           onclick = paste0("Shiny.onInputChange(\"",ns("modify_dosage_button"),"\",  this.id)"))
       df_new_dosage
