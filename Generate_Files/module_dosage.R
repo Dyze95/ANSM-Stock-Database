@@ -1,3 +1,7 @@
+adjust_display_start <- function(previous_page, nb_rows) {
+  if(previous_page > nb_rows) NULL else previous_page
+}
+
 new_dosage_output <- function(id) {
   ns <- NS(id)
   DT::dataTableOutput(ns("table_Dosage"))
@@ -17,7 +21,7 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
   ns <- session$ns
   react <- reactiveValues(selectedRow = 0,
                           old_CIP7 = numeric(),
-                          previous_page = NULL,
+                          previous_page = 0,
                           df_user_dosage = data.frame(CIP7 = character(), Dosage = character(), Unites = character(),
                                                       stringsAsFactors = F))
   
@@ -59,14 +63,13 @@ module_dosage <- function(input, output, session, df_DCI, CIP_data, CIP_dosage) 
     
     df_dosage
   })
-
   
   output$table_Dosage <- DT::renderDataTable(df_dosage(), rownames = F, escape = F,
                                              selection = list(selected = which(df_dosage()$CIP7 %in% isolate(react$selection_CIP7))),
                                              options = list(
                                               dom = 'BRrltpi',
                                               autoWidth=TRUE,
-                                              displayStart=react$previous_page,
+                                              displayStart=adjust_display_start(isolate(react$previous_page), nrow(df_dosage())),
                                               #lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                                               ColReorder = TRUE,
                                               preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
