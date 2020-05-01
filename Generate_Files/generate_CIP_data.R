@@ -78,8 +78,9 @@ for(i in correction$CIP7) {
   }
 }
 
-# Corrections Laboratoires à double exploitant selon CODEX
+# Corrections Laboratoires manuelles
 corrections_exploitant <- data.frame(CIS = character(), Laboratoire = character())
+# Corrections Laboratoires à double exploitant selon CODEX
 corrections_exploitant <- rbind(corrections_exploitant,
                                 data.frame(CIS=60427957, Laboratoire="LIPOMED"))
 corrections_exploitant <- rbind(corrections_exploitant,
@@ -132,6 +133,13 @@ corrections_exploitant <- rbind(corrections_exploitant,
                                 data.frame(CIS=68725005, Laboratoire="ASTRAZENECA"))
 corrections_exploitant <- rbind(corrections_exploitant,
                                 data.frame(CIS=68818192, Laboratoire="SANOFI AVENTIS FRANCE"))
+# Corrections adhoc selon instructions FRO
+corrections_exploitant <- rbind(corrections_exploitant,
+                                data.frame(CIS=64729383, Laboratoire="EVERPHARMA"))
+corrections_exploitant <- rbind(corrections_exploitant,
+                                data.frame(CIS=67746384, Laboratoire="EVERPHARMA"))
+corrections_exploitant <- rbind(corrections_exploitant,
+                                data.frame(CIS=65959832, Laboratoire="EVERPHARMA"))
 for(i in corrections_exploitant$CIS) {
   CIP_data$Laboratoire[CIP_data$CIS == i] <- as.character(corrections_exploitant$Laboratoire[corrections_exploitant$CIS == i])
 }
