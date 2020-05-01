@@ -30,7 +30,7 @@ module_DCI <- function(input, output, session, CIP_data) {
                           CIP_to_add_logical = logical(),
                           df_DCI = data.frame(stringsAsFactors = FALSE))
   
-  output$table_DCI = DT::renderDataTable(react$df_DCI, rownames = FALSE, escape=FALSE, server=FALSE,
+  output$table_DCI = DT::renderDataTable(react$df_DCI, rownames = FALSE, escape=FALSE, server=FALSE, selection="none",
     options = list(
       dom = 'BRrltpi',
       autoWidth=TRUE,
@@ -73,7 +73,7 @@ module_DCI <- function(input, output, session, CIP_data) {
       react$previous_DCI_page <- input$table_DCI_rows_current[1] - 1
     }
     
-    add_DCI_input <- trimws(strsplit(stri_trans_general(input$add_DCI, "Latin-ASCII"), "&")[[1]])
+    add_DCI_input <- gsub("\\(", "\\\\(", trimws(strsplit(stri_trans_general(input$add_DCI, "Latin-ASCII"), "&")[[1]]))
     react$CIP_to_add_logical <- Reduce("|", lapply(add_DCI_input,
                                              function(DCI) { grepl(DCI, CIP_data$DCI, ignore.case = TRUE) }))
     

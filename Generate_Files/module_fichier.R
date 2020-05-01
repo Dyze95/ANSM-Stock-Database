@@ -8,7 +8,7 @@ file_output <- function(id) {
   DT::dataTableOutput(ns("table_fichier"))
 }
 
-module_fichier <- function(input, output, session, df_dosage, df_new_dosage, CIP_data, CIP_dosage) {
+module_fichier <- function(input, output, session, df_dosage, selection_CIP7, CIP_data, CIP_dosage) {
   ns <- session$ns
   
   df_fichier <- reactive({
@@ -21,26 +21,41 @@ module_fichier <- function(input, output, session, df_dosage, df_new_dosage, CIP
     df_fichier <- df_fichier[,column_order]
   }) 
   
-  output$table_fichier = DT::renderDataTable(df_fichier(), rownames = FALSE)
+  output$table_fichier = DT::renderDataTable(df_fichier(), rownames = FALSE, selection="none")
   
   observeEvent(input$generate_button, {
+    if(sum(!df_dosage()$CIP7 %in% selection_CIP7()) > 0) {
+      showModal(modalDialog(
+        title = "Generation du fichier Excel",
+        p("Il reste des dosages non confirmés dans l'onglet Dosages. Êtes-vous sûr(e) de vouloir continuer ?"),
+        
+        footer = tagList(
+          modalButton("Annuler"),
+          actionButton(ns("generate_confirm"), "Oui")
+        )
+      ))
+    } else {
+      generate_modal()
+    }
+  })
+  
+  observeEvent(input$generate_confirm, {
+    removeModal()
+    generate_modal()
+  })
+    
+  generate_modal <- function() {
     textInputInline <- function(inputId, label, value = NULL) {
       tags$tr(width = "100%",
               tags$td(width = "40%", div(strong(label))),
-              tags$td(width = "60%", textInput(ns(inputId), label = NULL, value = value)))
+              tags$td(width = "60%", textInput(ns(inputId), label = NULL, value = value)),
+              tags$style(type="text/css", paste0("#",ns(inputId)," { margin-top: 5px; margin-bottom:-10px }")))
     }
     
-    
-    output$text_generate <- renderText("Avez-vous bien vérifié que les
-                                           informations de l'onglet Dosages sont correctes ?
-                                           Elles contiennent des informations sur les CIP7 non
-                                           rencontrés jusqu'à présent. Ces informations
-                                           seront enregistrées dans le système et non modifiables.")
     output$text_column <- renderText("Veuillez choisir ci-dessous les noms de colonnes
                                          qui seront affichées dans le fichier.")
     showModal(modalDialog(
       title = "Generation du fichier Excel",
-      textOutput(ns("text_generate")),
       textOutput(ns("text_column")),
       h3(""),
       tags$table(width="80%",
@@ -60,7 +75,7 @@ module_fichier <- function(input, output, session, df_dosage, df_new_dosage, CIP
         downloadButton(ns("download"), "Telecharger")
       )
     ))
-  })
+  }
   
   output$download <- downloadHandler(filename = "Point_Stock.csv", content = function(file) {
     removeModal()
@@ -79,11 +94,9 @@ module_fichier <- function(input, output, session, df_dosage, df_new_dosage, CIP
       write.table(df_fichier_final, file, sep=";", row.names=FALSE)
     }
     
-    if(nrow(df_new_dosage()) > 0) {
-      df_dosage_final <- rbind(CIP_dosage, df_new_dosage()[c("CIP7", "Dosage", "Unites")])
-    } else {
-      df_dosage_final <- CIP_dosage
-    }
-    write.table(df_dosage_final, "CIP_Dosage.csv", sep=";", row.names=FALSE)
+    CIP_dosage <- CIP_dosage[!CIP_dosage$CIP7 %in% df_dosage()$CIP7,]
+    CIP_dosage <- rbind(CIP_dosage, df_dosage()[df_dosage()$CIP7 %in% selection_CIP7(),c("CIP7", "Dosage", "Unites")])
+    write.table(CIP_dosage, "CIP_Dosage.csv", sep=";", row.names=FALSE)
+    stopApp()
   }, contentType = "text/csv")
 }

@@ -18,11 +18,12 @@ ui <- fluidPage(
                 Shiny.onInputChange(variableName, null);
                 });
                 "),
+  tags$style(HTML('#dosage-table_Dosage table.dataTable tr.selected td, table.dataTable td.selected {background-color: palegreen !important;}')), 
   
   titlePanel("Création des fichiers de suivi"),
   
   verticalLayout(
-    sidebarPanel(width = 6, fluidRow(
+    sidebarPanel(width = 7, fluidRow(
       column(width = 7, text_DCI_input("DCI")),
       add_DCI_button("DCI"),
       file_generate_button("fichier")
@@ -45,9 +46,10 @@ server <- function(input, output, session) {
   
   tmp <- callModule(module_dosage, "dosage", df_DCI, CIP_data, CIP_dosage)
   df_dosage <- tmp[[1]]
-  df_new_dosage <- tmp[[2]]
+  selection_CIP7 <- tmp[[2]]
   
-  callModule(module_fichier, "fichier", df_dosage, df_new_dosage, CIP_data, CIP_dosage)
+  callModule(module_fichier, "fichier", df_dosage, selection_CIP7, CIP_data, CIP_dosage)
+  
 }
 
 shinyApp(ui, server)
