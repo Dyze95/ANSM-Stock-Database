@@ -13,20 +13,20 @@ column_names_path <- "column_names.csv"
 
 # Lecture du fichier de noms de colonnes
 tmp <- read.csv(column_names_path, sep=";")
-column_names <- as.character(tmp[,2])
-names(column_names) <- as.character(tmp[,1])
+column_names <- as.character(tmp$x)
+names(column_names) <- as.character(rownames(tmp))
 
 # Lecture du fichier de specialites
-shortDCI <- unique(read.csv(liste_specialites_path, sep=";"))
+shortDCI <- unique(read.csv(liste_specialites_path, sep=";", stringsAsFactors = F))
 
 # Lecture du fichier de formes
-shortForme <- unique(read.csv(liste_formes_path, sep=";"))
+shortForme <- unique(read.csv(liste_formes_path, sep=";", stringsAsFactors = F))
 
 # Lecture du fichier de correction des dosages
-CIP_Dosage <- read.csv(liste_dosage_path, sep=";")
+CIP_Dosage <- read.csv(liste_dosage_path, sep=";", stringsAsFactors = F)
 
 # Lecture du fichier de missing CIP7
-missing_CIP7 <- read.csv(liste_missing_path, sep=";")
+missing_CIP7 <- read.csv(liste_missing_path, sep=";", stringsAsFactors = F)
 
 # Import des donnees
 data <- data.frame()
@@ -47,6 +47,20 @@ data_2 <- shortenForme(data_2, shortForme)
 data_2 <- fillMissing_CIP7(data_2, missing_CIP7)
 data_2 <- correctDosage(data_2, CIP_Dosage)
 data_2 <- remove_duplicatesCIP7_sameDate(data_2)
+
+data_2$Dose_mg <- compute_dose_mg(data_2)
+data_2 <- compute_equiv_factor(data_2)
+
+# Formatage des données
+data_2$Date <- as.Date(data_2$Date)
+data_2$Stock <- as.numeric(data_2$Stock)
+data_2$Stock[is.na(data_2$Stock)] <-  0
+
+# Analyse des données
+data_2$Stock_U <- data_2$Stock * data_2$Unites
+data_2$Ventes.J.1_U <- data_2$Ventes.J.1 * data_2$Unites
+
+data_2$Stock_U_equiv <- data_2$Stock_U * data_2$Equiv_Factor
   
 # Check des données 
 check_allNum(data_2, "CIP7")
@@ -54,23 +68,24 @@ check_noNA(data_2, "DCI")
 check_noNA(data_2, "Forme")
 check_noNA(data_2, "Dosage")
 check_allNum(data_2, "Unites")
+check_allNum(data_2, "Stock")
 check_noDuplicateCIP7_sameDate(data_2)
-
-# Formatage des données
-data_2$Stock <- as.numeric(data_2$Stock)
+check_same_DCI_Forme_Dosage_per_CIP7(data_2)
 
 # Proposer d'ajouter un CIP7 au missing_CIP7 s'il y a encore des NA
 # Proposer d'ajouter un nouveau Dosage dans le CIP_Dosage s'il y a encore des NA
 
-# Analyse des données
-data_2$Stock_U <- data_2$Stock * data_2$Unites
-data_2$`Ventes J-1_U` <- data_2$`Ventes J-1` * data_2$Unites
-
 # Sauvegarde des données
-write.table(data_2, "database-stock.csv", sep=";")
+write.table(data_2, "database-stock.csv", sep=";", row.names = FALSE)
+
+# Chargement des données
+data_2 <- read.csv("database-stock.csv", sep=";", stringsAsFactors = F)
+data_2$Date <- as.Date(data_2$Date)
 
 # Upload des données
-upload_dataframe(data_2)
+#upload_dataframe(data_2)
+
+data_2$dose_mg <- compute_dose_mg(data_2)
 
 #data_3 <- data_2[,c("DCI", "Dosage", "Unites", "Stock", "Ventes J-1")]
 #data_3$Stock_U <- data_3$Stock * data_3$Unites

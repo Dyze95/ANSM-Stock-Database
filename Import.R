@@ -2,11 +2,16 @@ library(readxl)
 library(plyr)
 
 import_singledir <- function(import_path, data, column_names) {
-  date_dir = readline(prompt = paste0("Quelle date voulez-vous donner au dossier ",import_path," ? "))
+  date_dir <- NA
+  while(is.na(date_dir)) {
+    date_dir <- as.Date(readline(prompt = paste0("Quelle date voulez-vous donner au dossier ",import_path," ? (DD/MM/YYYY) ")),
+                        format = "%d/%m/%Y")
+  }
   liste_files = list.files(import_path, pattern = "^[^~]")
   
   for (filename in liste_files) {
     file = read_excel(paste0(import_path, "/", filename))
+    names(file) <- gsub("\r\n", "", names(file))
     file_columnnames = vector()
     
     for(col in names(file)) {
@@ -17,9 +22,11 @@ import_singledir <- function(import_path, data, column_names) {
           file_columnnames = c(file_columnnames, column_names[col])
         }
       } else {
+        print(col)
         keep_col = readline(prompt=paste0("La colonne ", col, " est inconnue, faut-il la conserver ? (Y/N) "))
         if(keep_col == "Y") {
           newname = readline(prompt = "Entrez un nom pour cette nouvelle colonne : ")
+          newname <- gsub("[-/ ]", ".", newname)
           column_names[col] = newname
           file_columnnames = c(file_columnnames, newname)
         } else {
@@ -29,7 +36,7 @@ import_singledir <- function(import_path, data, column_names) {
       }
     }
     names(file) = file_columnnames
-    file["Date"] <- rep(date_dir,nrow(file))
+    file["Date"] <- date_dir
     data = rbind.fill(data, file)
   }
   
@@ -47,9 +54,3 @@ import_multidir <- function(import_path, data, column_names) {
   
   return(list(data, column_names))
 }
-
-#data = data.frame()
-#column_names = vector()
-#tmp <- import_multidir("Reponses", data, column_names)
-#data = tmp[[1]]
-#column_names = tmp[[2]]

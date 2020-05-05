@@ -1,3 +1,5 @@
+library(dplyr)
+
 # Raccourcit le DCI initialement dans la colonne data[col_name]
 # Ajoute au dataframe data une nouvelle colonne "DCI" à l'aide du dataframe shortDCI
 # La premiere colonne du shortDCI contient le long DCI et la deuxieme
@@ -26,12 +28,12 @@ shortenForme <- function(data, shortForme) {
   return(data)
 }
 
-correctDosage <- function(data, corrections) {
-  for(row_id in 1:nrow(corrections)) {
-    data$Dosage[data$CIP7 %in% corrections$CIP7[row_id]] <- as.character(corrections$Dosage[row_id])
-  }
-  return(data)
-}
+# correctDosage <- function(data, corrections) {
+#   for(row_id in 1:nrow(corrections)) {
+#     data$Dosage[data$CIP7 %in% corrections$CIP7[row_id]] <- as.character(corrections$Dosage[row_id])
+#   }
+#   return(data)
+# }
 
 # Supprimer les lignes ayant des NA dans la colonne Laboratoire et Specialite
 cleanEmptyLines <- function(data) {
@@ -39,8 +41,15 @@ cleanEmptyLines <- function(data) {
 }
 
 correctDosage <- function(data, CIP_Dosage) {
-  names(data)[names(data) == "Dosage"] <- "Dosage_wrong"
-  names(data)[names(data) == "Unites"] <- "Unites_wrong"
+  # Verifier si la correction a déjà été faite
+  if("Dosage_wrong" %in% names(data)) {
+    data$Dosage <- NULL
+    data$Unites <- NULL
+  } else {
+    names(data)[names(data) == "Dosage"] <- "Dosage_wrong"
+    names(data)[names(data) == "Unites"] <- "Unites_wrong"
+  }
+  
   data <- merge(x=data, y=CIP_Dosage, by="CIP7", all.x=TRUE)
   return(data)
 }
@@ -77,4 +86,69 @@ remove_duplicatesCIP7_sameDate <- function(data) {
     }
   }
   return(data)
+}
+
+compute_dose_mg <- function(data) {
+  sapply(data$Dosage, function(dosage) {
+    if(grepl("^[0-9,.]+mg$", dosage)) {
+      as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg$", "\\1", dosage)))
+    } else if(grepl("^[0-9,.]+mg;[0-9,.]+mg$", dosage)) {
+      as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg;[0-9,.]+mg$", "\\1", dosage)))
+    } else if(grepl("^[0-9,.]+mg/m[Ll];[0-9,.]+m[Ll]$", dosage)){
+      c <- as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg/m[Ll];[0-9,.]+m[Ll]$", "\\1", dosage)))
+      v <- as.numeric(gsub(",", ".", gsub("^[0-9,.]+mg/m[Ll];([0-9,.]+)m[Ll]$", "\\1", dosage)))
+      c * v
+    } else if(grepl("^[0-9,.]+mg/m[Ll];[0-9,.]+mg/m[Ll];[0-9,.]+m[Ll]$", dosage)) {
+      c <- as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg/m[Ll];[0-9,.]+mg/m[Ll];[0-9,.]+m[Ll]$", "\\1", dosage)))
+      v <- as.numeric(gsub(",", ".", gsub("^[0-9,.]+mg/m[Ll];[0-9,.]+mg/m[Ll];([0-9,.]+)m[Ll]$", "\\1", dosage)))
+      c * v
+    } else if(grepl("^[0-9]+MUI$", dosage)) {
+      as.numeric(gsub("^([0-9]+)MUI$", "\\1", dosage))
+    } else if(grepl("^[0-9]+UI$", dosage)) {
+      as.numeric(gsub("^([0-9]+)UI$", "\\1", dosage)) / 1e6
+    } else {
+      NA
+    }
+  })
+}
+
+compute_equiv_factor <- function(data) {
+  data %>%
+  group_by(DCI, Forme) %>%
+  mutate(Equiv_Factor = Dose_mg / min(Dose_mg))
+}
+
+# Attention à bien vérifier que pas de doublons de dates pour un même CIP7
+fill_missing_dates <- function(data) {
+  unique(data$CIP7) %>%
+    lapply(FUN = function(x) {
+      sub_data <- data %>%
+        filter(CIP7 == x)
+      sub_data <- sub_data[order(sub_data$Date),]
+      initial_dates <- sub_data$Date
+      target_dates <- unique(data %>% filter(DCI == sub_data$DCI[1],
+                                             Forme == sub_data$Forme[1],
+                                             Dosage == sub_data$Dosage[1]) %>% .$Date)
+      target_dates %>%
+        lapply(FUN = function(date) {
+          if(date %in% initial_dates) {
+            filter(sub_data, Date == date)
+          } else if(date < min(initial_dates)) {
+            filter(sub_data, Date == min(initial_dates)) %>% mutate(Date = date)
+          } else if(date > max(initial_dates)) {
+            filter(sub_data, Date == max(initial_dates)) %>% mutate(Date = date)
+          } else {
+            index_closest <- max(which(date > initial_dates))
+            interval <- as.numeric(initial_dates[index_closest + 1] - initial_dates[index_closest])
+            stock_before <- sub_data$Stock[index_closest]
+            stock_after  <- sub_data$Stock[index_closest + 1]
+            estimated_stock <- stock_before + as.numeric(date - initial_dates[index_closest]) * (stock_after - stock_before) / interval
+            filter(sub_data, Date == initial_dates[index_closest]) %>%
+              mutate(Date = date, Stock = estimated_stock)
+            
+          }
+        }) %>%
+        bind_rows
+    }) %>%
+  bind_rows
 }
