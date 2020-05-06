@@ -12,7 +12,7 @@ module_fichier <- function(input, output, session, df_dosage, selection_CIP7, CI
   ns <- session$ns
   
   df_fichier <- reactive({
-    df_fichier <- merge(df_dosage(), CIP_data, by="CIP7", all.x=TRUE) #CIP_data[CIP_data$CIP7 %in% react$df_Dosage()$CIP7,]
+    df_fichier <- merge(df_dosage()[,c("CIP7", "Dosage", "Unites")], CIP_data, by="CIP7", all.x=TRUE) #CIP_data[CIP_data$CIP7 %in% react$df_Dosage()$CIP7,]
     df_fichier$Dosage <- df_fichier$Dosage.x
     df_fichier$Unites <- df_fichier$Unites.x
     column_order <- c("Laboratoire",
@@ -21,7 +21,13 @@ module_fichier <- function(input, output, session, df_dosage, selection_CIP7, CI
     df_fichier <- df_fichier[,column_order]
   }) 
   
-  output$table_fichier = DT::renderDataTable(df_fichier(), rownames = FALSE, selection="none")
+  output$table_fichier = DT::renderDataTable(df_fichier(), rownames = FALSE, selection="none",
+                                             editable = list(target = "cell", disable = list(columns = 1:ncol(df_fichier()))))
+  
+  observeEvent(input$table_fichier_cell_edit, {
+    row <- input$table_fichier_cell_edit$row[1]
+    CIP_data$Laboratoire[CIP_data$CIP7 == df_fichier()$CIP7[row]] <<- input$table_fichier_cell_edit$value[1]
+  })
   
   observeEvent(input$generate_button, {
     if(sum(!df_dosage()$CIP7 %in% selection_CIP7()) > 0) {
@@ -97,6 +103,8 @@ module_fichier <- function(input, output, session, df_dosage, selection_CIP7, CI
     CIP_dosage <- CIP_dosage[!CIP_dosage$CIP7 %in% df_dosage()$CIP7,]
     CIP_dosage <- rbind(CIP_dosage, df_dosage()[df_dosage()$CIP7 %in% selection_CIP7(),c("CIP7", "Dosage", "Unites")])
     write.table(CIP_dosage, "CIP_Dosage.csv", sep=";", row.names=FALSE)
+    write.table(CIP_data, "CIP_Data.csv", sep=";", row.names=FALSE)
+    
     stopApp()
   }, contentType = "text/csv")
 }
