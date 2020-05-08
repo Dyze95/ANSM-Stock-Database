@@ -27,12 +27,12 @@ checkColumnNames <- function(data) {
 
 check_noDuplicateCIP7_sameDate <- function(data) {
   no_duplicate <- TRUE
-  for(date in unique(data$Date)) {
+  for(date in as.list(unique(data$Date))) {
     data_date <- data[data$Date == date,]
     if(any(duplicated(data_date$CIP7))) {
       no_duplicate <- FALSE
-      print(paste0(date, " : doublons pour le CIP7 ",
-                   unique(data_date$CIP7[duplicated(data_date$CIP7)])))
+      cat(paste0(date, " : doublons pour le CIP7 ",
+                   unique(data_date$CIP7[duplicated(data_date$CIP7)]), "\n"))
     }
   }
   if(no_duplicate) print("Doublons : OK")
@@ -40,7 +40,7 @@ check_noDuplicateCIP7_sameDate <- function(data) {
 
 check_same_DCI_Forme_Dosage_per_CIP7 <- function(data) {
   if(all(sapply(unique(data$CIP7), function(x) {
-    if(nrow(unique(data %>% filter(CIP7 == x) %>% select(DCI, Forme, Dosage, Unites))) == 1) T 
+    if(nrow(distinct(data %>% filter(CIP7 == x) %>% select(DCI, Forme, Dosage, Unites))) == 1) T 
     else {
       print(x)
       F

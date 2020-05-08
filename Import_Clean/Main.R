@@ -4,7 +4,7 @@ source("Check.R")
 source("Upload.R")
 source("Helpers.R")
 
-import_dir_path <- "Reponses"
+import_dir_path <- "Reponses Hebdo"
 liste_specialites_path <- "shortDCI.csv"
 liste_formes_path <- "shortFormes.csv"
 liste_dosage_path <- "CIP_Dosage.csv"
@@ -41,20 +41,25 @@ write.table(column_names, "column_names.csv", sep=";")
 checkColumnNames(data)
 
 # Processing des données
-data_2 <- cleanEmptyLines(data)
+data_2 <- distinct(data)
+data_2 <- cleanEmptyLines(data_2)
 data_2 <- shortenDCI(data_2, shortDCI)
 data_2 <- shortenForme(data_2, shortForme)
 data_2 <- fillMissing_CIP7(data_2, missing_CIP7)
 data_2 <- correctDosage(data_2, CIP_Dosage)
 data_2 <- remove_duplicatesCIP7_sameDate(data_2)
 
-data_2$Dose_mg <- compute_dose_mg(data_2)
-data_2 <- compute_equiv_factor(data_2)
-
 # Formatage des données
 data_2$Date <- as.Date(data_2$Date)
-data_2$Stock <- as.numeric(data_2$Stock)
-data_2$Stock[is.na(data_2$Stock)] <-  0
+data_2$Stock <- sapply(data_2$Stock, FUN = smart_convert_to_numeric)
+check_allNum(data_2, "Stock")
+
+check_no_missing_dates(data_2)
+data_2 <- fill_missing_dates(data_2)
+check_no_missing_dates(data_2)
+
+data_2$Dose_mg <- compute_dose_mg(data_2)
+data_2 <- compute_equiv_factor(data_2)
 
 # Analyse des données
 data_2$Stock_U <- data_2$Stock * data_2$Unites
@@ -71,21 +76,22 @@ check_allNum(data_2, "Unites")
 check_allNum(data_2, "Stock")
 check_noDuplicateCIP7_sameDate(data_2)
 check_same_DCI_Forme_Dosage_per_CIP7(data_2)
+check_no_missing_dates(data_2)
 
 # Proposer d'ajouter un CIP7 au missing_CIP7 s'il y a encore des NA
 # Proposer d'ajouter un nouveau Dosage dans le CIP_Dosage s'il y a encore des NA
 
 # Sauvegarde des données
-write.table(data_2, "database-stock.csv", sep=";", row.names = FALSE)
+write.table(data_2, "../database-stock_hebdo.csv", sep=";", row.names = FALSE)
 
 # Chargement des données
-data_2 <- read.csv("database-stock.csv", sep=";", stringsAsFactors = F)
+data_2 <- read.csv("../database-stock.csv", sep=";", stringsAsFactors = F)
 data_2$Date <- as.Date(data_2$Date)
 
 # Upload des données
 #upload_dataframe(data_2)
 
-data_2$dose_mg <- compute_dose_mg(data_2)
+#data_2$dose_mg <- compute_dose_mg(data_2)
 
 #data_3 <- data_2[,c("DCI", "Dosage", "Unites", "Stock", "Ventes J-1")]
 #data_3$Stock_U <- data_3$Stock * data_3$Unites

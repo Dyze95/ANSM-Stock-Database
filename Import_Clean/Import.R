@@ -22,7 +22,7 @@ import_singledir <- function(import_path, data, column_names) {
           file_columnnames = c(file_columnnames, column_names[col])
         }
       } else {
-        print(col)
+        print(filename)
         keep_col = readline(prompt=paste0("La colonne ", col, " est inconnue, faut-il la conserver ? (Y/N) "))
         if(keep_col == "Y") {
           newname = readline(prompt = "Entrez un nom pour cette nouvelle colonne : ")

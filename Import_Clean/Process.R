@@ -74,7 +74,6 @@ remove_duplicatesCIP7_sameDate <- function(data) {
         print(paste0("Voici les doublons du ",date," pour le CIP ",CIP))
         print(data[data$Date == date & data$CIP7 == CIP,])
         indexes <- row.names(data[data$Date == date & data$CIP7 == CIP,])
-        print(class(indexes))
         index_toKeep <- NA
         while(!(index_toKeep %in% indexes)) {
         index_toKeep <- readline(prompt = paste0("Quelle ligne voulez-vous conserver ? (",
@@ -90,10 +89,12 @@ remove_duplicatesCIP7_sameDate <- function(data) {
 
 compute_dose_mg <- function(data) {
   sapply(data$Dosage, function(dosage) {
-    if(grepl("^[0-9,.]+mg$", dosage)) {
-      as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg$", "\\1", dosage)))
-    } else if(grepl("^[0-9,.]+mg;[0-9,.]+mg$", dosage)) {
-      as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg;[0-9,.]+mg$", "\\1", dosage)))
+    dosage <- gsub(",", ".", dosage)
+    if(grepl("^[0-9.]+(mg|g|µg|microgrammes)(;[0-9.]+(mg|g|µg|microgrammes))*$", dosage)) {
+      n <- as.numeric(gsub("^([0-9.]+)(mg|g|µg|microgrammes)(;[0-9.]+(mg|g|µg|microgrammes))*$", "\\1", dosage))
+      unit <- gsub("^([0-9.]+)(mg|g|µg|microgrammes)(;[0-9.]+(mg|g|µg|microgrammes))*$", "\\2", dosage)
+      unit <- switch(unit, "mg" = 1, "g" = 1000, "µg" = 0.001, "microgrammes" = 0.001)
+      n * unit
     } else if(grepl("^[0-9,.]+mg/m[Ll];[0-9,.]+m[Ll]$", dosage)){
       c <- as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg/m[Ll];[0-9,.]+m[Ll]$", "\\1", dosage)))
       v <- as.numeric(gsub(",", ".", gsub("^[0-9,.]+mg/m[Ll];([0-9,.]+)m[Ll]$", "\\1", dosage)))
@@ -102,10 +103,14 @@ compute_dose_mg <- function(data) {
       c <- as.numeric(gsub(",", ".", gsub("^([0-9,.]+)mg/m[Ll];[0-9,.]+mg/m[Ll];[0-9,.]+m[Ll]$", "\\1", dosage)))
       v <- as.numeric(gsub(",", ".", gsub("^[0-9,.]+mg/m[Ll];[0-9,.]+mg/m[Ll];([0-9,.]+)m[Ll]$", "\\1", dosage)))
       c * v
-    } else if(grepl("^[0-9]+MUI$", dosage)) {
-      as.numeric(gsub("^([0-9]+)MUI$", "\\1", dosage))
-    } else if(grepl("^[0-9]+UI$", dosage)) {
-      as.numeric(gsub("^([0-9]+)UI$", "\\1", dosage)) / 1e6
+    } else if(grepl("^[0-9.]+MUI$", dosage)) {
+      as.numeric(gsub("^([0-9.]+)MUI$", "\\1", dosage))
+    } else if(grepl("^[0-9.]+UI$", dosage)) {
+      as.numeric(gsub("^([0-9.]+)UI$", "\\1", dosage)) / 1e6
+    } else if(grepl("^[0-9.]+mg/[0-9.]+mL$", dosage)) {
+      as.numeric(gsub("^([0-9.]+)mg/[0-9.]+mL$", "\\1", dosage))
+    } else if(grepl("^[0-9.]+m[Ll]$", dosage)) { 
+      as.numeric(gsub("^([0-9.]+)m[Ll]$", "\\1", dosage))
     } else {
       NA
     }
@@ -151,4 +156,17 @@ fill_missing_dates <- function(data) {
         bind_rows
     }) %>%
   bind_rows
+}
+
+smart_convert_to_numeric <- function(x) {
+  x <- gsub(" ", "", x)
+  if(!is.na(suppressWarnings(as.numeric(x)))) {
+    as.numeric(x)
+  } else if(is.na(x)) {
+    0
+  } else if (x == "NA" || x == "N/A" || x == "-") {
+    0
+  } else {
+    NA
+  }
 }
