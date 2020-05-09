@@ -58,7 +58,7 @@ check_no_missing_dates(data_2)
 data_2 <- fill_missing_dates(data_2)
 check_no_missing_dates(data_2)
 
-data_2$Dose_mg <- compute_dose_mg(data_2)
+data_2 <- compute_dose_mg(data_2)
 data_2 <- compute_equiv_factor(data_2)
 
 # Analyse des données

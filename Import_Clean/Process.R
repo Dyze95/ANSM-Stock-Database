@@ -28,13 +28,6 @@ shortenForme <- function(data, shortForme) {
   return(data)
 }
 
-# correctDosage <- function(data, corrections) {
-#   for(row_id in 1:nrow(corrections)) {
-#     data$Dosage[data$CIP7 %in% corrections$CIP7[row_id]] <- as.character(corrections$Dosage[row_id])
-#   }
-#   return(data)
-# }
-
 # Supprimer les lignes ayant des NA dans la colonne Laboratoire et Specialite
 cleanEmptyLines <- function(data) {
   return(data[complete.cases(data[,c("Laboratoire", "Specialite")]),])
@@ -88,7 +81,7 @@ remove_duplicatesCIP7_sameDate <- function(data) {
 }
 
 compute_dose_mg <- function(data) {
-  sapply(data$Dosage, function(dosage) {
+  data$Dose_mg <- sapply(data$Dosage, function(dosage) {
     dosage <- gsub(",", ".", dosage)
     if(grepl("^[0-9.]+(mg|g|µg|microgrammes)(;[0-9.]+(mg|g|µg|microgrammes))*$", dosage)) {
       n <- as.numeric(gsub("^([0-9.]+)(mg|g|µg|microgrammes)(;[0-9.]+(mg|g|µg|microgrammes))*$", "\\1", dosage))
@@ -115,6 +108,7 @@ compute_dose_mg <- function(data) {
       NA
     }
   })
+  data
 }
 
 compute_equiv_factor <- function(data) {

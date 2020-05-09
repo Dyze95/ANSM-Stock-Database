@@ -1,4 +1,12 @@
-# Fichiers CSV
+# Arborescence du Git
+
+**Dossier Generate_Files** : Application Shiny permettant de générer des tableaux Excel de points stocks à partir d'une liste de DCI choisie par l'utilisateur. Des fonctionnalités de correction des dosages, du nombre d'unités par boîtes et des exploitants sont prévues.
+
+**Dossier Import_Clean** : Ensemble de scripts R permettant d'importer de la donnée Excel retournée par les exploitants et de la retraiter.
+
+**Dossier Dataviz_Stock** : Application Shiny permettant de la visaliser la donnée retraitée par les scripts du dossier Import_Clean
+
+# Fichiers CSV du dossier Import_Clean
 
 column_names.csv : Traduction des noms de colonnes vus lors de l'import depuis XLSX
 
@@ -10,7 +18,7 @@ CIP_Dosage.csv : Tableau de correspondance entre CIP7 et Dosage/Unites. Ce ne so
 
 missing_CIP7.csv : Tableau permettant d'attribuer un CIP7 adhoc à une présentation pour laquelle le CIP7 est manquant (cela arrive parfois que les labos ne remplissent pas le CIP7 mais uniquement la spécialité et la présentation). Ce CIP7 adhoc permet de faciliter les traitements futurs (retrouver le dosage, notamment)
 
-# Scripts
+# Scripts du dossier Import_Clean
 
 Import.R : fonctions d'import des données à partir d'un ou plusieurs dossiers
 
@@ -87,11 +95,12 @@ Retour\
 dataframe augmenté
 
 ### fillMissing_CIP7
-Lorsque le CIP7 est manquant dans le dataframe data, la fonction tente de lui assigner un CIP7 adhoc à l'aide du dataframe missing_CIP7. Le matching est fait sur le Laboratoire, la Specialite et la Presentation.
+Lorsque le CIP7 est manquant dans le dataframe data, la fonction tente de lui assigner un CIP7 adhoc à l'aide du dataframe missing_CIP7. Le matching est fait sur le Laboratoire, le DCI, la Specialite et la Presentation.\
+Attention : le matching est fait sur les DCI courts, donc attention à bien appeler la fonction fillMissing_CIP7 sur un dataframe déjà retraité par la fonction shortenDCI.
 
 Arguments\
 data : dataframe de données\
-missing_CIP7 : dataframe de correspondance entre Laboratoire/Specialite/Presentation et CIP7 adhoc
+missing_CIP7 : dataframe de correspondance entre Laboratoire/DCI/Specialite/Presentation et CIP7 adhoc
 
 Retour\
 dataframe augmenté
@@ -104,6 +113,46 @@ data : dataframe de données\
 
 Retour\
 dataframe nettoyé
+
+### compute_dose_mg
+Ajoute une nouvelle colonne Dose_mg au dataframe data correspondant à la dose en milligrammes du dosage de la spécalité. Le calcul se fait par une analyse regex de la chaine de caractère de la colonne Dosage du dataframe data. Par exemple, pour un dosage de 5mg/mL;2mL la Dose_mg sera de 10.
+
+Arguments\
+data : dataframe de données\
+
+Retour\
+dataframe augmenté de la colonne Dose_mg
+
+### compute_equiv_factor
+Ajoute une nouvelle colonne Equiv_Factor au dataframe data correspondant au rapport entre la dose en milligrammes de la spécialité et la dose minimale en milligrames de toutes les spécialités de même DCI et Forme. Cette nouvelle colonne permettra de calculer des bilans de stocks agrégés par (DCI, Forme). Le calcul est fait à partir de la colonne Dose_mg du dataframe data.
+
+Arguments\
+data : dataframe de données\
+
+Retour\
+dataframe augmenté de la colonne Equiv_Factor
+
+### fill_missing_dates
+Pour que les agrégations par (DCI, Forme, Dosage) soient correctes, il faut que les données de tous les CIP7 de même DCI, forme et dosage soient renseignées aux mêmes dates exactement. Cette fonction remplit les "trous", c'est-à-dire que si les données d'un CIP7 venaient à manquer pour une date, elle rajoute une ligne au dataframe pour ce CIP7 à cette date en interpôlant son stock à partir des données qu'elle possède sur ce CIP7 à d'autres dates.\
+Plus précisément :\
+- si la date manquante est antérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date minimale connue.\
+- si la date manquante est postérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date maximale connue.\
+- si la date manquante se situe entre deux dates connues de ce CIP7, le stock est la moyenne des stocks de ces deux dates (pondérée par l'écart en jours entre la date manquante et les dates connues).
+
+Arguments\
+data : dataframe de données\
+
+Retour\
+dataframe augmenté des lignes correspondant aux dates manquantes
+
+### smart_convert_to_numeric
+Fonction permettant de convertir intelligemment une chaine de caractères (sensée représenter des stocks, des ventes, des approvisionnements) en nombre. Les espaces entre les milliers sont supprimés, les "NA", "N/A" et autres "-" sont convertis en 0. Le reste est marqué comme NA pour indiquer à l'utilisateur qu'il faut vérifier dans l'Excel source.
+
+Arguments\
+x : chaine de caractères à convertir en nombre\
+
+Retour\
+un nombre ou NA
 
 ## Fonctions de Check.R
 
@@ -119,9 +168,16 @@ Verifie que le dataframe data contient au moins les colonnes suivantes : "Date",
 ### check_noDuplicateCIP7_sameDate
 Verifie que le dataframe data ne contient pas de doublons de CIP7 pour une même date
 
+### check_same_DCI_Forme_Dosage_per_CIP7
+Verifie que pour chaque CIP7 du dataframe data, les lignes correspondantes ont le même DCI, la même forme et le même dosage.
+
+### check_no_missing_dates
+Verifie que le dataframe data ne comporte pas de dates manquantes pour un CIP7 (voir la fonction fill_missing_dates de Process.R, les dates des CIP7 de même DCI, forme et dosage doivent être strictement les mêmes).
+
 ## Fonctions de Helpers.R
 
 ### get_mg_from_dosage
+[OBSOLETE depuis l'ajout de la fonction compute_dose_mg de Process.R]\
 Prend en entrée une chaine de caractères répresentant un dosage et renvoie un nombre représentant la dose en mg. (Non utilisé pour l'instant, mais peut-etre utile...)
 
 Exemples :\
