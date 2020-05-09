@@ -54,7 +54,7 @@ dossier/\
 ---->fichier_B.xlsx\
 -->sous-dossier-2/\
 ---->fichier_C.xlsx\
----->fichier_D.xlsx\
+---->fichier_D.xlsx
 
 Arguments\
 import_path : chemin vers le dossier\
@@ -73,7 +73,7 @@ Raccourcit le DCI initialement de la colonne "DCI" dataframe data à l'aide du d
 
 Arguments\
 data : dataframe de données\
-shortDCI : dataframe de correspondance des DCI\
+shortDCI : dataframe de correspondance des DCI
 
 Retour\
 dataframe augmenté
@@ -109,7 +109,7 @@ dataframe augmenté
 Lorsqu'il y a des doublons de CIP7 à la même date dans la dataframe data, la fonction affiche les lignes de doublons et fait choisir à l'utilisateur quelle ligne il souhaite conserver
 
 Arguments\
-data : dataframe de données\
+data : dataframe de données
 
 Retour\
 dataframe nettoyé
@@ -118,7 +118,7 @@ dataframe nettoyé
 Ajoute une nouvelle colonne Dose_mg au dataframe data correspondant à la dose en milligrammes du dosage de la spécalité. Le calcul se fait par une analyse regex de la chaine de caractère de la colonne Dosage du dataframe data. Par exemple, pour un dosage de 5mg/mL;2mL la Dose_mg sera de 10.
 
 Arguments\
-data : dataframe de données\
+data : dataframe de données
 
 Retour\
 dataframe augmenté de la colonne Dose_mg
@@ -127,7 +127,7 @@ dataframe augmenté de la colonne Dose_mg
 Ajoute une nouvelle colonne Equiv_Factor au dataframe data correspondant au rapport entre la dose en milligrammes de la spécialité et la dose minimale en milligrames de toutes les spécialités de même DCI et Forme. Cette nouvelle colonne permettra de calculer des bilans de stocks agrégés par (DCI, Forme). Le calcul est fait à partir de la colonne Dose_mg du dataframe data.
 
 Arguments\
-data : dataframe de données\
+data : dataframe de données
 
 Retour\
 dataframe augmenté de la colonne Equiv_Factor
@@ -140,7 +140,7 @@ Plus précisément :\
 - si la date manquante se situe entre deux dates connues de ce CIP7, le stock est la moyenne des stocks de ces deux dates (pondérée par l'écart en jours entre la date manquante et les dates connues).
 
 Arguments\
-data : dataframe de données\
+data : dataframe de données
 
 Retour\
 dataframe augmenté des lignes correspondant aux dates manquantes
@@ -149,7 +149,7 @@ dataframe augmenté des lignes correspondant aux dates manquantes
 Fonction permettant de convertir intelligemment une chaine de caractères (sensée représenter des stocks, des ventes, des approvisionnements) en nombre. Les espaces entre les milliers sont supprimés, les "NA", "N/A" et autres "-" sont convertis en 0. Le reste est marqué comme NA pour indiquer à l'utilisateur qu'il faut vérifier dans l'Excel source.
 
 Arguments\
-x : chaine de caractères à convertir en nombre\
+x : chaine de caractères à convertir en nombre
 
 Retour\
 un nombre ou NA
