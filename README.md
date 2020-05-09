@@ -134,9 +134,9 @@ dataframe augmenté de la colonne Equiv_Factor
 
 ### fill_missing_dates
 Pour que les agrégations par (DCI, Forme, Dosage) soient correctes, il faut que les données de tous les CIP7 de même DCI, forme et dosage soient renseignées aux mêmes dates exactement. Cette fonction remplit les "trous", c'est-à-dire que si les données d'un CIP7 venaient à manquer pour une date, elle rajoute une ligne au dataframe pour ce CIP7 à cette date en interpôlant son stock à partir des données qu'elle possède sur ce CIP7 à d'autres dates.\
-Plus précisément :\
-- si la date manquante est antérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date minimale connue.\
-- si la date manquante est postérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date maximale connue.\
+Plus précisément :
+- si la date manquante est antérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date minimale connue.
+- si la date manquante est postérieure à toutes les dates connues de ce CIP7, le stock est le même qu'à la date maximale connue.
 - si la date manquante se situe entre deux dates connues de ce CIP7, le stock est la moyenne des stocks de ces deux dates (pondérée par l'écart en jours entre la date manquante et les dates connues).
 
 Arguments\
